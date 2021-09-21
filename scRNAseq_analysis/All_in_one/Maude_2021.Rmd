@@ -1,0 +1,139 @@
+---
+title: Monocyte-derived immunoregulatory macrophages contribute to the alveolar macrophage pool in humans
+titlerunning: Regulatory macrophages in lung
+authors: 
+- name: Maude Liégeois
+  address: Laboratory of Cellular and Molecular Immunology, GIGA Institute, ULiège, 4000 Liège, Belgium
+  
+- name: Qiang Bai
+  address: Faculty of Veterinary Medicine, ULiège, 4000 Liège, Belgium; Laboratory of Immunophysiology, GIGA Institute, ULiège, 4000 Liège, Belgium
+  
+- name: Laurence Fievez
+  address: Laboratory of Cellular and Molecular Immunology, GIGA Institute, ULiège, 4000 Liège, Belgium; Faculty of Veterinary Medicine, ULiège, 4000 Liège, Belgium
+
+- name: Dimitri Pirottin
+  address: Laboratory of Cellular and Molecular Immunology, GIGA Institute, ULiège, 4000 Liège, Belgium; Faculty of Veterinary Medicine, ULiège, 4000 Liège, Belgium
+
+- name: Céline Legrand
+  address: Laboratory of Cellular and Molecular Immunology, GIGA Institute, ULiège, 4000 Liège, Belgium; Faculty of Veterinary Medicine, ULiège, 4000 Liège, Belgium
+
+- name: Julien Guiot
+  address: Department of Pulmonary Medicine, Centre Hospitalier Universitaire (CHU), ULiège, 4000 Liège, Belgium; Laboratory of Pneumology, GIGA Institute, ULiège, 4000 Liège, Belgium
+
+- name: Florence Schleich
+  address: Department of Pulmonary Medicine, Centre Hospitalier Universitaire (CHU), ULiège, 4000 Liège, Belgium; Laboratory of Pneumology, GIGA Institute, ULiège, 4000 Liège, Belgium
+
+- name: Jean-Louis Corhay
+  address: Laboratory of Pneumology, GIGA Institute, ULiège, 4000 Liège, Belgium
+
+- name: Renaud Louis
+  address: Department of Pulmonary Medicine, Centre Hospitalier Universitaire (CHU), ULiège, 4000 Liège, Belgium; Laboratory of Pneumology, GIGA Institute, ULiège, 4000 Liège, Belgium
+
+- name: Thomas Marichal
+  address: Faculty of Veterinary Medicine, ULiège, 4000 Liège, Belgium; Laboratory of Immunophysiology, GIGA Institute, ULiège, 4000 Liège, Belgium; Walloon Excellence in Life Sciences and Biotechnology (WELBIO), Wallonia, Belgium
+  Phone: +32 (0) 4 366 95 55
+  email: t.marichal@uliege.be 
+
+- name: Fabrice Bureau
+  address: Laboratory of Cellular and Molecular Immunology, GIGA Institute, ULiège, 4000 Liège, Belgium; Faculty of Veterinary Medicine, ULiège, 4000 Liège, Belgium; Walloon Excellence in Life Sciences and Biotechnology (WELBIO), Wallonia, Belgium
+  Phone: +32 (0) 4 366 32 14
+  email: fabrice.bureau@uliege.be
+
+abstract: |
+  Alveolar macrophages (AM) are functionally important innate cells involved in lung homeostasis and immunity. While the idea that AM merely represent a homogenous population has been recently challenged, it remains unclear whether ontogenically and functionally distinct subpopulations of AMs can be found in healthy human lungs, and to what extent conditions like smoking or chronic obstructive pulmonary disease (COPD) trigger changes in the AM compartment. Here, we analyzed bronchoalveolar lavage fluid (BALF) cells from healthy non-smokers, healthy smokers and COPD patients by flow cytometry, bulk and single-cell(sc) RNA-sequencing (RNA-seq). We found that BALF CD206+ macrophage subpopulations could be distinguished based on their level of auto-fluorescence. Bulk RNA-seq analysis of blood monocytes, CD206+ autofluorescentlow (AFlo) and AFhi macrophages supported that AFlo macrophages derived from monocytes that were imprinted by the alveolar niche to differentiate into AM expressing both monocyte- and AM-related genes. ScRNA-seq analyses performed on total BALF cells from the same patients highlighted the dual monocytic and self-proliferative origin of AM, as well as the functional diversity of the AM pool in healthy and COPD lungs. Of note, monocyte-derived AFlo AM were equally represented in each category of subjects and exhibited an immunoregulatory profile, including the ability to secrete the immunosuppressive cytokine interleukin(IL-10). Finally, we provide evidence that the monocyte-associated marker CCR2 can be used by flow cytometry to distinguish AM according to their origin, thereby opening new perspectives to better understand AM complexity and functions in different contexts, such as infections, inflammatory disorders or cancer. 
+
+bibliography: bibliography.bib
+biblio-style: spphys
+# bibstyle options spbasic(default), spphys, spmpsci
+output: rticles::ctex
+---
+
+# Introduction {#intro}
+We were further interested in investigating the identity of AF-low and AF-high AM using high-throughput technologies. For this purpose, we recruited 3 healthy non-smokers, 3 healthy smokers and 3 COPD patients, as presented in Table 1. Individuals were matched for age. While healthy subjects did not exhibit any abnormalities in forced expiratory volume (FEV) or in the FEV/forced vital capacity (FVC) ratio, COPD patients showed low FEV and FEV/FVC values and were diagnosed stages II or III according to the GOLD COPD stage (Table 1 in manuscript). BALF were collected and BALF cells were divided into 3 fractions (Figure 2A in manuscript). The first fraction was used to perform a total and differential cell count, which showed no obvious signs of inflammation in each of the patients analyzed (Table 1 in manuscript). The second and third fractions were used for bulk and single cell mRNA-sequencing, respectively (Figure 2A in manuscript).
+For bulk mRNA-sequencing (RNA-seq), CD14^+ monocytes were isolated from the blood and AF-low and AF-high CD45^+ CD206^+ cells were FACS-sorted from the BALF of the same patients (Figure 2A). Notably, AF-low AM were present in each patient analyzed (Figure 2B). 
+Here present the source codes for all single-cell analyses from 10X Cellranger output to figure production. 
+
+# Data import, QC and cell typeing {#sec:1}
+
+## Data availability
+Source data containing counts matrix, features and barcodes for each samples can be downloaded from following links: 
+[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183982](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183982)
+
+Source data for individual samples: 
+
+- NGS19-I415_Dim_LBA-Hum3
+[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575227](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575227)
+
+- NGS19-I679_Dim_LBA-Hum4
+[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575228](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575228)
+
+- NGS19-J028_Dim_LBA-Hum5
+[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575229](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575229)
+
+- NGS19-J141_Dim_LBA-Hum7
+[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575230](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575230)
+
+- NGS19-J142_Dim_LBA-Hum8
+[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575231](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575231)
+
+- NGS19-J263_Dim_LBA-Hum9
+[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575232](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575232)
+
+- NGS19-J264_Dim_LBA-Hum10
+[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575233](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575233)
+
+- NGS19-K359_Dim_LBA-Hum11
+[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575234](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSM5575234)
+
+Processed results can be accessed via online visualization platform: 
+[https://gigaimmunophysiology.shinyapps.io/Human_monocytes](https://gigaimmunophysiology.shinyapps.io/Human_monocytes)
+
+
+## load data with Seurat package
+Unzip data and load. 
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(Seurat)
+library(dplyr)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+```
+
+
+```{r, eval=FALSE}
+library(Seurat)
+library(dplyr)
+
+  NGS19_I415_Dim_LBA_Hum3.seuratObject=
+    "NGS19-I415_Dim_LBA-Hum3/outs/filtered_feature_bc_matrix/",
+  NGS19_I679_Dim_LBA_Hum4.seuratObject=
+    "NGS19-I679_Dim_LBA-Hum4/outs/filtered_feature_bc_matrix/",
+  NGS19_J028_Dim_LBA_Hum5.seuratObject=
+    "NGS19-J028_Dim_LBA-Hum5/outs/filtered_feature_bc_matrix/",
+  NGS19_J141_Dim_LBA_Hum7.seuratObject=
+    "NGS19-J141_Dim_LBA-Hum7/outs/filtered_feature_bc_matrix/",
+  NGS19_J142_Dim_LBA_Hum8.seuratObject=
+    "NGS19-J142_Dim_LBA-Hum8/outs/filtered_feature_bc_matrix/",
+  NGS19_J263_Dim_LBA_Hum9.seuratObject=
+    "NGS19-J263_Dim_LBA-Hum9/outs/filtered_feature_bc_matrix/",
+  NGS19_J264_Dim_LBA_Hum10.seuratObject=
+    "NGS19-J264_Dim_LBA-Hum10/outs/filtered_feature_bc_matrix/",
+  NGS19_K359_Dim_LBA_Hum11.seuratObject=
+    "NGS19-K359_Dim_LBA-Hum11/outs/filtered_feature_bc_matrix/",
+  NGS19_K360_Dim_LBA_Hum12.seuratObject=
+    "NGS19-K360_Dim_LBA-Hum12/outs/filtered_feature_bc_matrix/"
+  )
+
+
+```
+
+
+# System Configuration {#sec:3}
+```{r}
+sessionInfo()
+```
+
+
+
+

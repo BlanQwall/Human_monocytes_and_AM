@@ -1,0 +1,327 @@
+---
+title: "2-Sample QC and cell filtering"
+bibliography: bib.bib
+link-citations: yes
+date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
+output: 
+  pdf_document:
+    pandoc_args: 
+      - '../../common.yaml'
+      - --listings
+    includes: 
+      in_header: '../../preamble.tex'
+    toc: true
+    number_sections: true
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    df_print: tibble
+---
+
+
+\newpage
+
+# Description
+
+Below the CellRanger count outputs were piped to Seurat package version 4.0.3 [@SeuratV4]. Briefly, filtered matrices containing cell IDs and feature names in each sample were used to build a Seurat object (`CreatSeuratObject` wrapped in `seurat.setup` function). We performed a quality control by filtering out the cells with less than 200 detected genes, the genes detected in less than 3 cells and the cells exhibiting more than 20% of mitochondrial genes. Gene counts in each sample was normalized separately by default method “LogNormalize” with scale factor 104 and log-transformation. Two thousands of highly variable features were identified with the “vst” method. 
+
+
+# Load data and package: 
+```{r eval=FALSE}
+# load package and data
+library(Seurat)
+library(ggpubr)
+source("../../R/seurat.setup.R")
+dir.10x <- "Counts/scRNAseq" # 10X output directory
+```
+
+```{r remove after render, message=FALSE, warning=FALSE, include=FALSE}
+library(Seurat)
+library(ggpubr)
+source("../../R/seurat.setup.R")
+dir.10x <- "../../../../Counts/scRNAseq" # 10X output directory
+```
+
+
+# QC for each sample
+
+## Sample: NGS19-I415_Dim_LBA-Hum3
+```{r message=FALSE, warning=FALSE}
+
+NGS19_I415_Dim_LBA_Hum3 <- 
+  seurat.setup(path.10x =  file.path(dir.10x, 
+                                        "NGS19-I415_Dim_LBA-Hum3/outs/filtered_feature_bc_matrix/"), 
+                                        project = "Liegeois_humanAM", 
+                                        dimensionality = 1:20, 
+                                        mt.percentage = 20, 
+                                        human = TRUE)
+```
+
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_I415_Dim_LBA_Hum3$plots$feature_vln, 
+          NGS19_I415_Dim_LBA_Hum3$plots$RNA_mt.pct_scatter, 
+          NGS19_I415_Dim_LBA_Hum3$plots$JackStrawPlot, 
+          NGS19_I415_Dim_LBA_Hum3$plots$ElbowPlot, ncol = 2, nrow = 2)
+```
+
+Sample: NGS19-I415_Dim_LBA-Hum3
+```{r fig.width=12, fig.height=10,message=FALSE, warning=FALSE}
+ggarrange(NGS19_I415_Dim_LBA_Hum3$plots$variable_features, 
+          NGS19_I415_Dim_LBA_Hum3$plots$PCA_plot, 
+          NGS19_I415_Dim_LBA_Hum3$plots$UMAP_plot, 
+          NGS19_I415_Dim_LBA_Hum3$plots$TSNE_plot, ncol = 2, nrow = 2)
+```
+
+## Sample: NGS19-I679_Dim_LBA-Hum4
+```{r message=FALSE, warning=FALSE}
+
+NGS19_I679_Dim_LBA_Hum4 <- 
+  seurat.setup(path.10x =  file.path(dir.10x,
+                                        "NGS19-I679_Dim_LBA-Hum4/outs/filtered_feature_bc_matrix/"), 
+                                        project = "Liegeois_humanAM", 
+                                        dimensionality = 1:20, 
+                                        mt.percentage = 20, 
+                                        human = TRUE)
+```
+
+```{r fig.width=12, fig.height=10,message=FALSE, warning=FALSE}
+ggarrange(NGS19_I679_Dim_LBA_Hum4$plots$feature_vln,
+          NGS19_I679_Dim_LBA_Hum4$plots$RNA_mt.pct_scatter, 
+          NGS19_I679_Dim_LBA_Hum4$plots$JackStrawPlot, 
+          NGS19_I679_Dim_LBA_Hum4$plots$ElbowPlot, ncol = 2, nrow = 2)
+```
+
+Sample: NGS19-I679_Dim_LBA-Hum4
+```{r fig.width=12, fig.height=10,message=FALSE, warning=FALSE}
+ggarrange(NGS19_I679_Dim_LBA_Hum4$plots$variable_features, 
+          NGS19_I679_Dim_LBA_Hum4$plots$PCA_plot, 
+          NGS19_I679_Dim_LBA_Hum4$plots$UMAP_plot, 
+          NGS19_I679_Dim_LBA_Hum4$plots$TSNE_plot, ncol = 2, nrow = 2)
+```
+
+## Sample: NGS19-J028_Dim_LBA-Hum5
+```{r message=FALSE, warning=FALSE}
+
+NGS19_J028_Dim_LBA_Hum5 <- 
+  seurat.setup(path.10x =  file.path(dir.10x, 
+                                        "NGS19-J028_Dim_LBA-Hum5/outs/filtered_feature_bc_matrix/"), 
+                                        project = "Liegeois_humanAM", 
+                                        dimensionality = 1:20, 
+                                        mt.percentage = 20, 
+                                        human = TRUE)
+```
+
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J028_Dim_LBA_Hum5$plots$feature_vln, 
+          NGS19_J028_Dim_LBA_Hum5$plots$RNA_mt.pct_scatter, 
+          NGS19_J028_Dim_LBA_Hum5$plots$JackStrawPlot, 
+          NGS19_J028_Dim_LBA_Hum5$plots$ElbowPlot, ncol = 2, nrow = 2)
+```
+
+Sample: NGS19-J028_Dim_LBA-Hum5
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J028_Dim_LBA_Hum5$plots$variable_features, 
+          NGS19_J028_Dim_LBA_Hum5$plots$PCA_plot, 
+          NGS19_J028_Dim_LBA_Hum5$plots$UMAP_plot, 
+          NGS19_J028_Dim_LBA_Hum5$plots$TSNE_plot, ncol = 2, nrow = 2)
+```
+
+## Sample: NGS19-J141_Dim_LBA-Hum7
+```{r message=FALSE, warning=FALSE}
+
+NGS19_J141_Dim_LBA_Hum7 <-
+  seurat.setup(path.10x =  file.path(dir.10x, 
+                                        "NGS19-J141_Dim_LBA-Hum7/outs/filtered_feature_bc_matrix/"), 
+                                        project = "Liegeois_humanAM", 
+                                        dimensionality = 1:20, 
+                                        mt.percentage = 20, 
+                                        human = TRUE)
+```
+
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J141_Dim_LBA_Hum7$plots$feature_vln, 
+          NGS19_J141_Dim_LBA_Hum7$plots$RNA_mt.pct_scatter, 
+          NGS19_J141_Dim_LBA_Hum7$plots$JackStrawPlot, 
+          NGS19_J141_Dim_LBA_Hum7$plots$ElbowPlot, ncol = 2, nrow = 2)
+```
+
+Sample: NGS19-J141_Dim_LBA-Hum7
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J141_Dim_LBA_Hum7$plots$variable_features, 
+          NGS19_J141_Dim_LBA_Hum7$plots$PCA_plot, 
+          NGS19_J141_Dim_LBA_Hum7$plots$UMAP_plot, 
+          NGS19_J141_Dim_LBA_Hum7$plots$TSNE_plot, ncol = 2, nrow = 2)
+```
+
+## Sample: NGS19-J142_Dim_LBA-Hum8
+```{r message=FALSE, warning=FALSE, message=FALSE, warning=FALSE}
+
+NGS19_J142_Dim_LBA_Hum8 <- 
+  seurat.setup(path.10x =  file.path(dir.10x, 
+                                        "NGS19-J142_Dim_LBA-Hum8/outs/filtered_feature_bc_matrix/"), 
+                                        project = "Liegeois_humanAM", 
+                                        dimensionality = 1:20, 
+                                        mt.percentage = 20, 
+                                        human = TRUE)
+```
+
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J142_Dim_LBA_Hum8$plots$feature_vln, 
+          NGS19_J142_Dim_LBA_Hum8$plots$RNA_mt.pct_scatter, 
+          NGS19_J142_Dim_LBA_Hum8$plots$JackStrawPlot, 
+          NGS19_J142_Dim_LBA_Hum8$plots$ElbowPlot, ncol = 2, nrow = 2)
+```
+
+Sample: NGS19-J142_Dim_LBA-Hum8
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J142_Dim_LBA_Hum8$plots$variable_features, 
+          NGS19_J142_Dim_LBA_Hum8$plots$PCA_plot, 
+          NGS19_J142_Dim_LBA_Hum8$plots$UMAP_plot, 
+          NGS19_J142_Dim_LBA_Hum8$plots$TSNE_plot, ncol = 2, nrow = 2)
+```
+
+## Sample: NGS19-J263_Dim_LBA-Hum9
+```{r message=FALSE, warning=FALSE}
+
+NGS19_J263_Dim_LBA_Hum9 <- 
+  seurat.setup(path.10x =  file.path(dir.10x, 
+                                        "NGS19-J263_Dim_LBA-Hum9/outs/filtered_feature_bc_matrix/"), 
+                                        project = "Liegeois_humanAM", 
+                                        dimensionality = 1:20, 
+                                        mt.percentage = 20, 
+                                        human = TRUE)
+```
+
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J263_Dim_LBA_Hum9$plots$feature_vln, 
+          NGS19_J263_Dim_LBA_Hum9$plots$RNA_mt.pct_scatter, 
+          NGS19_J263_Dim_LBA_Hum9$plots$JackStrawPlot, 
+          NGS19_J263_Dim_LBA_Hum9$plots$ElbowPlot, ncol = 2, nrow = 2)
+```
+
+Sample: NGS19-J263_Dim_LBA-Hum9
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J263_Dim_LBA_Hum9$plots$variable_features, 
+          NGS19_J263_Dim_LBA_Hum9$plots$PCA_plot, 
+          NGS19_J263_Dim_LBA_Hum9$plots$UMAP_plot,
+          NGS19_J263_Dim_LBA_Hum9$plots$TSNE_plot, ncol = 2, nrow = 2)
+```
+## Sample: NGS19-J264_Dim_LBA-Hum10
+```{r message=FALSE, warning=FALSE, message=FALSE, warning=FALSE}
+
+NGS19_J264_Dim_LBA_Hum10 <- 
+  seurat.setup(path.10x =  file.path(dir.10x, 
+                                         "NGS19-J264_Dim_LBA-Hum10/outs/filtered_feature_bc_matrix/"), 
+                                         project = "Liegeois_humanAM", 
+                                         dimensionality = 1:20, 
+                                         mt.percentage = 20, 
+                                         human = TRUE)
+```
+
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J264_Dim_LBA_Hum10$plots$feature_vln, 
+          NGS19_J264_Dim_LBA_Hum10$plots$RNA_mt.pct_scatter, 
+          NGS19_J264_Dim_LBA_Hum10$plots$JackStrawPlot, 
+          NGS19_J264_Dim_LBA_Hum10$plots$ElbowPlot, ncol = 2, nrow = 2)
+```
+
+Sample: NGS19-J264_Dim_LBA-Hum10
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_J264_Dim_LBA_Hum10$plots$variable_features, 
+          NGS19_J264_Dim_LBA_Hum10$plots$PCA_plot, 
+          NGS19_J264_Dim_LBA_Hum10$plots$UMAP_plot, 
+          NGS19_J264_Dim_LBA_Hum10$plots$TSNE_plot, ncol = 2, nrow = 2)
+```
+
+## Sample: NGS19-K359_Dim_LBA-Hum11
+```{r message=FALSE, warning=FALSE, message=FALSE, warning=FALSE}
+
+NGS19_K359_Dim_LBA_Hum11 <- 
+  seurat.setup(path.10x =  file.path(dir.10x, 
+                                         "/NGS19-K359_Dim_LBA-Hum11/outs/filtered_feature_bc_matrix/"), 
+                                         project = "Liegeois_humanAM", 
+                                         dimensionality = 1:20, 
+                                         mt.percentage = 20, 
+                                         human = TRUE)
+```
+
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_K359_Dim_LBA_Hum11$plots$feature_vln, 
+          NGS19_K359_Dim_LBA_Hum11$plots$RNA_mt.pct_scatter, 
+          NGS19_K359_Dim_LBA_Hum11$plots$JackStrawPlot, 
+          NGS19_K359_Dim_LBA_Hum11$plots$ElbowPlot, ncol = 2, nrow = 2)
+```
+
+Sample: NGS19-K359_Dim_LBA-Hum11
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_K359_Dim_LBA_Hum11$plots$variable_features, 
+          NGS19_K359_Dim_LBA_Hum11$plots$PCA_plot, 
+          NGS19_K359_Dim_LBA_Hum11$plots$UMAP_plot, 
+          NGS19_K359_Dim_LBA_Hum11$plots$TSNE_plot, ncol = 2, nrow = 2)
+```
+
+## Sample: NGS19-K360_Dim_LBA-Hum12
+```{r message=FALSE, warning=FALSE}
+
+NGS19_K360_Dim_LBA_Hum12 <- 
+  seurat.setup(path.10x =  file.path(dir.10x, 
+                                         "NGS19-K360_Dim_LBA-Hum12/outs/filtered_feature_bc_matrix/"), 
+                                         project = "Liegeois_humanAM", 
+                                         dimensionality = 1:20, 
+                                         mt.percentage = 20, 
+                                         human = TRUE)
+```
+
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_K360_Dim_LBA_Hum12$plots$feature_vln, 
+          NGS19_K360_Dim_LBA_Hum12$plots$RNA_mt.pct_scatter, 
+          NGS19_K360_Dim_LBA_Hum12$plots$JackStrawPlot, 
+          NGS19_K360_Dim_LBA_Hum12$plots$ElbowPlot, ncol = 2, nrow = 2)
+```
+
+Sample: NGS19-K360_Dim_LBA-Hum12
+```{r fig.width=12, fig.height=10, message=FALSE, warning=FALSE}
+ggarrange(NGS19_K360_Dim_LBA_Hum12$plots$variable_features, 
+          NGS19_K360_Dim_LBA_Hum12$plots$PCA_plot, 
+          NGS19_K360_Dim_LBA_Hum12$plots$UMAP_plot, 
+          NGS19_K360_Dim_LBA_Hum12$plots$TSNE_plot, ncol = 2, nrow = 2)
+```
+
+
+# Save data for other analyses
+```{r eval=FALSE}
+# save data for next use: 
+saveRDS(NGS18_G768_Dim_LBA_Hum1$seuratObject, 
+        file = "./NGS18_G768_Dim_LBA_Hum1.seuratObject.rds")
+saveRDS(NGS18_G904_Dim_LBA_Hum2$seuratObject, 
+        file = "./NGS18_G904_Dim_LBA_Hum2.seuratObject.rds")
+saveRDS(NGS19_I415_Dim_LBA_Hum3$seuratObject, 
+        file = "./NGS19_I415_Dim_LBA_Hum3.seuratObject.rds")
+saveRDS(NGS19_I679_Dim_LBA_Hum4$seuratObject, 
+        file = "./NGS19_I679_Dim_LBA_Hum4.seuratObject.rds")
+saveRDS(NGS19_J028_Dim_LBA_Hum5$seuratObject, 
+        file = "./NGS19_J028_Dim_LBA_Hum5.seuratObject.rds")
+saveRDS(NGS19_J140_Dim_LBA_Hum6$seuratObject,
+        file = "./NGS19_J140_Dim_LBA_Hum6.seuratObject.rds")
+saveRDS(NGS19_J141_Dim_LBA_Hum7$seuratObject, 
+        file = "./NGS19_J141_Dim_LBA_Hum7.seuratObject.rds")
+saveRDS(NGS19_J142_Dim_LBA_Hum8$seuratObject,
+        file = "./NGS19_J142_Dim_LBA_Hum8.seuratObject.rds")
+saveRDS(NGS19_J263_Dim_LBA_Hum9$seuratObject,
+        file = "./NGS19_J263_Dim_LBA_Hum9.seuratObject.rds")
+saveRDS(NGS19_J264_Dim_LBA_Hum10$seuratObject, 
+        file = "./NGS19_J264_Dim_LBA_Hum10.seuratObject.rds")
+saveRDS(NGS19_K359_Dim_LBA_Hum11$seuratObject, 
+        file = "./NGS19_K359_Dim_LBA_Hum11.seuratObject.rds")
+saveRDS(NGS19_K360_Dim_LBA_Hum12$seuratObject, 
+        file = "./NGS19_K360_Dim_LBA_Hum12.seuratObject.rds")
+```
+
+
+# Session information: 
+```{r}
+sessionInfo()
+```
+
+# References
+

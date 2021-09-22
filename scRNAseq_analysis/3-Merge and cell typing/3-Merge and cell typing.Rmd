@@ -1,0 +1,384 @@
+---
+# bibliography: bib.bib
+link-citations: yes
+date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
+output: 
+  pdf_document:
+    pandoc_args: 
+      - '../../common.yaml'
+      - --listings
+    includes: 
+      in_header: '../../preamble.tex'
+    toc: true
+    number_sections: true
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    df_print: tibble
+---
+
+
+\newpage
+
+# Description
+
+To identify and remove potential contaminated cell populations, cells from all samples were firstly merged and clustered with high resolution (res = 0.5) after the expression was normalized. Fourteen clusters were obtained (cluster 0 – 13). After careful check for the potential markers, the cluster 6, 12 and 13 were identified as  lymphocytes (high CD3E expression), mucosal epithelial cells and ciliated epithelial cells (high expression of EPCAM, TEKT2 and CFAP74, low PTPRC expression).  
+
+To characterize the monocyte/macrophage populations, we repeated normalization, scaling and FindVariableFeatures on only filtered “monocytes” data. The 4 clusters shown in Figure 4A were identified in the integrated data using “FindClusters” with resolution of 0.1. To visualize the data, a non-linear dimension reduction was calculated using “RunUMAP”. The cell cycle estimate was made with Seurat function CellCycleScoring. 
+
+# Load data: 
+
+```{r eval=FALSE}
+# load package and data
+library(Seurat)
+
+initiation.analysis.folder <- "../2-Sample QC and cell filtering"
+file.names <- list.files(initiation.analysis.folder, pattern = "*.rds")
+sample.names <- sub(".rds", "", file.names)
+
+table.samples <- data.frame(sample.names, file.names)
+
+# load individual samples under appropriate names
+for (i in 1:length(table.samples$sample.names)) {
+  assign(table.samples$sample.names[i], 
+         readRDS(file = file.path(initiation.analysis.folder, table.samples$file.names[i])))
+}
+
+```
+
+
+```{r remove after rendering, include=FALSE}
+library(Seurat)
+
+initiation.analysis.folder <- "../../../../Analysis/20200921_scRNAseq_initiation/"
+file.names <- list.files(initiation.analysis.folder, pattern = "*.rds")
+sample.names <- sub(".rds", "", file.names)
+
+table.samples <- data.frame(sample.names, file.names)
+
+i <- sapply(table.samples, is.factor)
+table.samples[i] <- lapply(table.samples[i], as.character) # this is for convert the factor to character. 
+
+table.samples <- table.samples[which(! table.samples$sample.names %in% c("NGS18_G768_Dim_LBA_Hum1.seuratObject", "NGS18_G904_Dim_LBA_Hum2.seuratObject", "NGS19_J140_Dim_LBA_Hum6.seuratObject")), ]
+
+rm("file.names", "sample.names") # remove individual vector to avoid confusion.  
+
+for (i in 1:length(table.samples$sample.names)) {
+  assign(table.samples$sample.names[i], readRDS(file = file.path(initiation.analysis.folder, table.samples$file.names[i])))
+}
+
+# no need
+# sample_prefix <- sapply(sample.names, function(x) substr(x, start = 1, stop = nchar(x) - 13))
+```
+
+
+    
+# Make metadata:
+
+The metadata of samples are also available with resource data in NCBI GEO database or click this (link to download)[https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE183974&format=file&file=GSE183974%5Fmetadata%5Fall%5Ffiltered%5Fcells%2Ecsv%2Egz]: 
+(https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183974)[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183974]
+
+Here's sample order: 
+```{r}
+table.samples$sample.names
+```
+
+
+```{r}
+sample.metadata <- data.frame(
+                              group = c("No fumer", "Fumer", "Fumer", "Fumer", 
+                                        "No fumer", "COPD", "No fumer", "COPD", 
+                                        "COPD"), 
+                              cell.type = rep("AM", length(table.samples$sample.names)), 
+                              origin = rep("LBA", length(table.samples$sample.names)), 
+                              sample_prefix = gsub(".*(Dim_)|.seuratObject", "\\2", table.samples$sample.names))
+rownames(sample.metadata) <- table.samples$sample.names
+sample.metadata
+```
+
+Add metadata to cells before merging: 
+```{r}
+# add sample information: 
+
+for (i in table.samples$sample.names) {
+  obj <- get(i)
+  obj$group <- sample.metadata[i, ]$group
+  assign(i, obj)
+}
+
+for (i in table.samples$sample.names) {
+  obj <- get(i)
+  obj$celltype <- sample.metadata[i, ]$cell.type
+  assign(i, obj)
+}
+
+# add pre-fix to cellnames: 
+
+for (i in table.samples$sample.names) {
+  obj <- get(i)
+  obj <- RenameCells(obj, add.cell.id = sample.metadata[i, ]$sample_prefix)
+  assign(i, obj)
+}
+
+```
+
+# Merge data and preparation for celltyping
+
+```{r}
+# add origine sample names: 
+for (i in table.samples$sample.names) {
+  obj <- get(i)
+  obj$origin <- sample.metadata[i, ]$sample_prefix
+  assign(i, obj)
+}
+
+results <- merge(x = get(table.samples$sample.names[1]), 
+                 y = sapply(table.samples$sample.names[2:length(table.samples$sample.names)], get ))
+```
+
+## Data processing: normalizaiton and scaling
+
+```{r message=FALSE, warning=FALSE}
+results <- NormalizeData(results, verbose = FALSE)
+results <- FindVariableFeatures(results, selection.method = "vst", nfeatures = 2000, 
+                                verbose = FALSE)
+results <- ScaleData(results, features = rownames(results), 
+                     verbose = FALSE)
+
+```
+
+## Dimension reduction to give a global view of all samples 
+```{r message=FALSE, warning=FALSE}
+results <- RunPCA(results, features = VariableFeatures(results), verbose = FALSE)
+results <- RunUMAP(results, dims = 1:15, verbose = FALSE)
+results <- RunTSNE(results, dims = 1:15)
+```
+
+
+## Cluster cells before celltyping
+
+Cluster cells with a high resolution will help to find small contaminated cells in the next steps. 
+```{r message=FALSE, warning=FALSE}
+results <- FindNeighbors(results, dims = 1:15, verbose = FALSE)
+results <- FindClusters(results, resolution = 0.5, verbose = FALSE)
+```
+
+
+## Check for batch effects 
+
+```{r}
+DimPlot(results, reduction = "pca", group.by = "group")
+```
+```{r}
+DimPlot(results, reduction = "pca", group.by = "origin")
+```
+```{r}
+DimPlot(results, reduction = "umap", group.by = "group")
+```
+```{r}
+DimPlot(results, reduction = "umap", group.by = "origin")
+```
+
+```{r}
+DimPlot(results, reduction = "tsne", group.by = "group")
+```
+```{r}
+DimPlot(results, reduction = "tsne", group.by = "origin")
+```
+*From PCA plot, little batch effect can be observed. In non-linear dimension reduction, TSNE/UMAP plots, we observed difference of subset distribution across samples, but mainly across the samples with different groups. This difference could be subsets related to the sample's groups.*  
+
+Save data for other analysese: 
+```{r eval=FALSE}
+saveRDS(results, file = "./results.merged.Rds")
+```
+
+
+# Celltyping 
+
+```{r fig.width=5, fig.height=4}
+DimPlot(results, reduction = "tsne")
+```
+*The cluster 6, 12 and 13 are isolated clusters from other main clusters, indicating these cells are very different from the main cell type, thus susceptible to be contaminated cells.*    
+
+First check monocyte-macrophage markers: 
+
+```{r fig.width=6, fig.height=5}
+FeaturePlot(results, features = c("MARCO", "CD68", "FCGR3A", "CD14"), reduction = "tsne")
+```
+
+```{r fig.height=7.2, fig.width=4}
+VlnPlot(results, features = c("MARCO", "CD68", "FCGR3A", "CD14"), ncol = 1, pt.size = 0)
+```
+
+Then lineage markers: 
+```{r fig.width=12, fig.height=7.6}
+FeaturePlot(results, features = c("PTPRC", "CD3E", 
+                                  "EPCAM", "MUC1", "MUC4",  # Epithelial cell markers
+                                  "TEKT2", "CFAP74",  # Mucosal eptiehial cell markers
+                                  "CLEC9A", "CLEC10A", "CD1C" # DC markers
+                                  ), 
+            reduction = "tsne")
+```
+
+```{r fig.height=9, fig.width=8}
+VlnPlot(results, features = c("PTPRC", "CD3E", "EPCAM", "MUC1", "MUC4", "TEKT2", "CFAP74",
+                              "CLEC9A", "CLEC10A", "CD1C"), ncol = 2, pt.size = 0)
+```
+*Cluster 12 and 13 are not immune cells (CD45 lo).* 
+*Cluster 12 should be mucosal epithelial cells (MUC1, MUC4, EPCAM)*
+*Cluster 13 should be ciliated cells (TEKT2, CFAP74, EPCAM). *
+*Cluster 11 is DC. But Cluster 11 is very close (high similarity) to the main monocyte-macrophage population. We should carefully investigate if they are true DCs or a subset of monocytes-macrophage population manifesting DC markers. *
+
+Remove contaminated populations: Cluster 6, 12 and 13.  
+```{r}
+results <- subset(results, idents = c(0:5, 7:11)) # here we leave cluster 11. 
+```
+
+Let's keep old clustering information before filtering.  
+
+```{r}
+results$seurat_clusters_before_filter <- results$seurat_clusters
+```
+
+
+# Normalization and redo cluster in filtered "monocytes"
+
+## Data processing in filtered "monocytes"
+
+```{r}
+results <- NormalizeData(results, verbose = FALSE)
+results <- FindVariableFeatures(results, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+results <- ScaleData(results, features = rownames(results))
+```
+
+
+##  Dimension reduction in filtered "monocytes"
+
+```{r}
+results <- RunPCA(results, features = VariableFeatures(results))
+results <- RunUMAP(results, dims = 1:6, verbose = FALSE)
+```
+
+## Clustering filtered "monocytes" 
+
+```{r}
+results <- FindNeighbors(results, reduction = "pca", dims = 1:6)
+results <- FindClusters(results, resolution = 0.12)
+```
+See the cluster distribution by group: 
+
+```{r fig.width=10, fig.height=4}
+library(ggplot2)
+
+pal_4c <- c("#2E359A", "#FC990E", "#720D0D", "#6E9BD8") # new pal 20201214 bis
+
+DimPlot(results, split.by = "group", cols = pal_4c)
+```
+
+See the cluster distribution in samples (by group): 
+
+```{r fig.width=10, fig.height=4}
+DimPlot(subset(results, subset = group == "COPD"), 
+        split.by = "origin", 
+        cols = pal_4c) + ggtitle("COPD")
+```
+
+```{r fig.width=10, fig.height=4}
+DimPlot(subset(results, subset = group == "Fumer"), split.by = "origin", 
+        cols = pal_4c) + ggtitle("Fumer")
+```
+
+```{r fig.width=10, fig.height=4}
+DimPlot(subset(results, subset = group == "No fumer"), split.by = "origin", 
+        cols = pal_4c) + ggtitle("Non-fumer")
+```
+
+Show distribution of clusters in barplot: 
+```{r fig.height=6, fig.width=4, message=FALSE}
+source("../../R/SeuratFreqTable.R")
+freq.celltype.list <- list(
+  COPD = Seurat2CellFreqTable(subset(results, subset = group == "COPD"), 
+                              slotName = "RNA_snn_res.0.12"),  
+  Fumer= Seurat2CellFreqTable(subset(results, subset = group == "Fumer"), 
+                              slotName = "RNA_snn_res.0.12"), 
+  No_Fumer= Seurat2CellFreqTable(subset(results, subset = group == "No fumer"), 
+                                 slotName = "RNA_snn_res.0.12") 
+)
+
+source("../../R/barChart.R")
+barChart(freq.celltype.list) + labs(fill = "Cluster") + scale_fill_manual(values = pal_4c)
+```
+
+See cluster distribution in each samples: 
+
+```{r fig.height=6, fig.width=6}
+freq.celltype.list <- list(
+  No_Fumer_1 = Seurat2CellFreqTable(subset(results, subset = origin == "LBA_Hum3"), 
+                              slotName = "RNA_snn_res.0.12"), 
+  No_Fumer_2 = Seurat2CellFreqTable(subset(results, subset = origin == "LBA_Hum8"), 
+                              slotName = "RNA_snn_res.0.12"), 
+  No_Fumer_3 = Seurat2CellFreqTable(subset(results, subset = origin == "LBA_Hum10"), 
+                              slotName = "RNA_snn_res.0.12"),  
+  Fumer_1 = Seurat2CellFreqTable(subset(results, subset = origin == "LBA_Hum4"), 
+                              slotName = "RNA_snn_res.0.12"), 
+  Fumer_2 = Seurat2CellFreqTable(subset(results, subset = origin == "LBA_Hum5"), 
+                              slotName = "RNA_snn_res.0.12"), 
+  Fumer_3 = Seurat2CellFreqTable(subset(results, subset = origin == "LBA_Hum7"), 
+                              slotName = "RNA_snn_res.0.12"), 
+  COPD_1 = Seurat2CellFreqTable(subset(results, subset = origin == "LBA_Hum9"), 
+                              slotName = "RNA_snn_res.0.12"), 
+  COPD_2 = Seurat2CellFreqTable(subset(results, subset = origin == "LBA_Hum11"), 
+                              slotName = "RNA_snn_res.0.12"), 
+  COPD_3 = Seurat2CellFreqTable(subset(results, subset = origin == "LBA_Hum12"), 
+                              slotName = "RNA_snn_res.0.12") 
+)
+
+barChart(freq.celltype.list) + labs(fill = "Cluster") + 
+  scale_fill_manual(values = pal_4c) + 
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+# Characterization of clustered populations 
+
+See the markers of each cluster: 
+
+```{r message=FALSE, warning=FALSE}
+all_cluster.markers <- FindAllMarkers(results)
+```
+
+```{r fig.height=11, fig.width=6}
+suppressMessages(library(dplyr))
+top20 <- all_cluster.markers %>% group_by(cluster) %>% top_n(n = 20, wt = avg_log2FC)
+DoHeatmap(results, features = top20$gene, group.colors = pal_4c) + NoLegend()
+```
+
+# Cell-cycle analysis 
+
+```{r fig.height=5, fig.width=6, message=FALSE}
+s.genes <- cc.genes$s.genes
+g2m.genes <- cc.genes$g2m.genes
+results <- CellCycleScoring(results, s.features = s.genes, g2m.features = g2m.genes, set.ident = FALSE)
+DimPlot(results, group.by = "Phase")
+```
+Distribution of cell-cycle phase by group: 
+
+```{r}
+freq.celltype.list <- list(
+  COPD = Seurat2CellFreqTable(subset(results, subset = group  == "COPD"), slotName = "Phase"), 
+  Fumer = Seurat2CellFreqTable(subset(results, subset = group  == "Fumer"), slotName = "Phase"), 
+  No_fumer = Seurat2CellFreqTable(subset(results, subset = group  == "No fumer"), slotName = "Phase")
+)
+barChart(freq.celltype.list) + labs(fill = "Cell-cycle phase")
+```
+
+```{r eval=FALSE} 
+saveRDS(results, file = "./so.merged_clusters.seuratObject.Rds")
+```
+
+
+
+# Session information
+```{r}
+sessionInfo()
+```
+

@@ -1,5 +1,5 @@
 ---
-title: "4-Functional characterization of clustered populations"
+title: "2-DESeq2 analysis"
 # bibliography: bib.bib
 link-citations: yes
 date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
@@ -22,19 +22,16 @@ output:
 \newpage
 
 # Description
+RNA-seq data were analyzed using R Bioconductor (3.5.1) and DESeq2 package (version 1.26.0) [@DESeq2]. 
 
 
-# Load data and packages 
-
-```{r eval=FALSE}
-library(Seurat)
-results <- readRDS(file = "./so.merged_clusters.seuratObject.Rds")
-```
+# Load data: 
 
 
 
-# Session information 
+# Session information
 ```{r}
 sessionInfo()
 ```
 
+# References

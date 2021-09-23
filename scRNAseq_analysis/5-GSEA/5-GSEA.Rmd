@@ -1,0 +1,43 @@
+---
+title: "4-Functional characterization of clustered populations"
+bibliography: bib.bib
+link-citations: yes
+date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
+output: 
+  pdf_document:
+    pandoc_args: 
+      - '../../common.yaml'
+      - --listings
+    includes: 
+      in_header: '../../preamble.tex'
+    toc: true
+    number_sections: true
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    df_print: tibble
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+
+\newpage
+
+# Description
+
+For Gene Set Enrichment Analysis (GSEA)[@GSEA], the normalized data shown in Figure 4A were used as expression dataset and clustering information was used as phenotype data to test the AFlo and AFhi AM signatures obtained above from bulk RNA-seq data and genesets available in MSigDB database. Normalized Enrichment Score (NES), FDR and nominal p-value were calculated with 300 permutations (100 permutations for testing MSigDB genesets) between samples from different phenotypes. 
+
+
+# Load data and packages 
+
+
+
+# Session information 
+```{r}
+sessionInfo()
+```
+
+# References
+

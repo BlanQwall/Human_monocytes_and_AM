@@ -1,6 +1,6 @@
 ---
 title: "4-Functional characterization of clustered populations"
-# bibliography: bib.bib
+bibliography: bib.bib
 link-citations: yes
 date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
 output: 
@@ -18,17 +18,453 @@ output:
     df_print: tibble
 ---
 
+```{r include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
 
 \newpage
 
 # Description
 
+Functional characterization of the cluster 1, 2, 3 and 4 by examining expression of deferentially expressing (DE) genes and functional markers with Seurat package[@SeuratV4]. 
+
+To compare bulk and scRNA-seq data, AFlo and AFhi AM signatures were calculated by comparing AFlo AM samples with AFhi AM samples using DESeq2 package. A threshold of P adjusted < 0.05 and a biological FC > 2 was applied to obtain the signatures. For each cell, a score of signatures was calculated with VISION package [@VISION] and the scores were presented using Seurat FeaturePlot function with the same embedding as in Figure 4A. 
+
+Notice: The cluster 1/2/3/4 in the manuscript referred to cluster 0/1/2/3 in the following codes. 
+
 
 # Load data and packages 
 
 ```{r eval=FALSE}
-library(Seurat)
+suppressMessages(library(Seurat))
+suppressMessages(library(dplyr))
 results <- readRDS(file = "./so.merged_clusters.seuratObject.Rds")
+```
+
+```{r include=FALSE}
+suppressMessages(library(Seurat))
+results <- readRDS(file = "../../../Human_Monocytes/4 - cell typing and filtering/so.merged_clusters.seuratObject.Rds")
+```
+
+# Distribution of cells in clusters
+
+```{r fig.height = 4, fig.width = 5}
+pal_4c <- c("#2E359A", "#FC990E", "#720D0D", "#6E9BD8") 
+p <- DimPlot(results, cols = pal_4c)
+p
+```
+
+UMAPplot split by group
+
+```{r dimplot 2.2, echo=FALSE, fig.height = 4, fig.width = 10}
+p <- DimPlot(results, cols = pal_4c, split.by = "group")
+p
+```
+
+Barplot split by group
+
+```{r fig.height=4, fig.width=6}
+source("../../R/barChart.R")
+source("../../R/SeuratFreqTable.R")
+freq.celltype.list <- list(
+  Hum3_Non_Fumer = Seurat2CellFreqTable(subset(results, subset = origin  == "LBA_Hum3"), slotName = "seurat_clusters"), 
+  Hum8_Non_Fumer = Seurat2CellFreqTable(subset(results, subset = origin  == "LBA_Hum8"), slotName = "seurat_clusters"), 
+  Hum10_Non_Fumer = Seurat2CellFreqTable(subset(results, subset = origin  == "LBA_Hum10"), slotName = "seurat_clusters"), 
+  Hum4_Fumer = Seurat2CellFreqTable(subset(results, subset = origin  == "LBA_Hum4"), slotName = "seurat_clusters"), 
+  Hum5_Fumer = Seurat2CellFreqTable(subset(results, subset = origin  == "LBA_Hum5"), slotName = "seurat_clusters"), 
+  Hum7_Fumer = Seurat2CellFreqTable(subset(results, subset = origin  == "LBA_Hum7"), slotName = "seurat_clusters"),
+  Hum9_COPD = Seurat2CellFreqTable(subset(results, subset = origin  == "LBA_Hum9"), slotName = "seurat_clusters"), 
+  Hum11_COPD = Seurat2CellFreqTable(subset(results, subset = origin  == "LBA_Hum11"), slotName = "seurat_clusters"), 
+  Hum12_COPD = Seurat2CellFreqTable(subset(results, subset = origin  == "LBA_Hum12"), slotName = "seurat_clusters")
+)
+p <- barChart(freq.celltype.list) + labs(fill = "Clusters in each sample") + scale_fill_manual(values = pal_4c) + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+p
+```
+
+
+# Expression of macrophage markers and Cluster 1/3/4 signatures
+
+
+```{r fig.width=10, fig.height=4}
+p <- DotPlot(results, features = c("MRC1", "CD68", 	"MARCO", "LYZ", "FCGR3A", # high expression of core macrophage genes
+                              "PPARG", # AM-associated transcription factor
+                              "FABP4", "AKR1C1", "LIMA1", "APOL1" , "RBP4",  # Cluster 1 upregulated
+                              "CD2", "CDH1", "ICOS",  # Cluster 1 overexpressed genes coding for cell adhesion molecules
+                              "CCR2", "SPP1", "CCL2", "S100A8", "CD14", # Cluster 3 overexpressed transcripts encoding monocyte lineage-associated molecules
+                              "CD1C", "CD1E", "FCER1A", "CLEC10A", # dendritic cell (DC)-associated proteins
+                              "MKI67", "PCLAF" , "CDK1" # Cluster 4 upregulated cycling-related genes
+                            ), assay = "RNA", 
+                    scale.by = "size",
+                    cols = c("dark blue", "dark red")) +
+                    theme(axis.text.x = element_text(angle = 90,
+                    vjust = 0.5,
+                    hjust=1))
+p
+```
+
+```{r remove after render Fig4D, include=FALSE}
+ggsave(filename = "DotPlot_signatures_C134.pdf",
+       path = "../../../Human_Monocytes/Rmd_production/Figures/", 
+       plot = p, 
+       height = 4, width = 10, 
+       device = "pdf")
+```
+
+# Expression of cluster 2 signature
+
+```{r fig.width=5.6, fig.height=4}
+p <- DotPlot(results, features = c("CYBB", "CYP1B1", "CYGB", 
+                                    "GPX3", 
+                                   "GCLC", "IL17RA", 
+                                   "PLA2G7", "ATP6V0D2", "CHI3L1", "ITGA6", "SPP1", "MMP12"),
+                    assay = "RNA", 
+                    scale.by = "size",
+                    cols = c("dark blue", "dark red")) +
+                    theme(axis.text.x = element_text(angle = 90,
+                    vjust = 0.5,
+                    hjust=1))
+p
+```
+
+```{r remove after render Fig5B, include=FALSE}
+ggsave(filename = "DotPlot_signatures_C2.pdf",
+       path = "../../../Human_Monocytes/Rmd_production/Figures/", 
+       plot = p, 
+       height = 4, width = 5.6, 
+       device = "pdf")
+```
+
+Signature of Cluster 2 in vlnplot: 
+
+```{r fig.width=6, fig.height=12}
+p <- VlnPlot(results, features = c("CYBB", "CYP1B1", "CYGB", 
+                                    "GPX3", 
+                                   "GCLC", "IL17RA", 
+                                   "PLA2G7", "ATP6V0D2", "CHI3L1", "ITGA6", "SPP1", "MMP12"),
+                    pt.size = 0, 
+                    cols = pal_4c, 
+                    ncol = 2)
+p
+```
+
+```{r remove after render Fig5B-vln, include=FALSE}
+ggsave(filename = "VlnPlot_signatures_C2.pdf",
+       path = "../../../Human_Monocytes/Rmd_production/Figures/", 
+       plot = p, 
+       height = 12, width = 6, 
+       device = "pdf")
+```
+
+
+# Focus on Cluster 3 and recluster
+
+> REMIND: The cluster 3 in the manuscript referred to cluster 2 in the following codes. 
+
+## subsetdata
+
+```{r}
+results.c2 <- subset(results, idents = 2)
+results.c2
+```
+
+As the DC-like population (cluster 11 in the pre-filter clustering) is mainly enriched in this cluster, let's first identify these cells. 
+
+```{r}
+DimPlot(results.c2, group.by = "seurat_clusters_before_filter")
+```
+*the DC(-like) cells are in this cluster 2.* 
+
+## Processing data (only cluster 3)
+
+> REMIND: The cluster 3 in the manuscript referred to cluster 2 in the following codes. 
+
+```{r message=FALSE, warning=FALSE}
+results.c2 <- NormalizeData(results.c2, verbose = FALSE)
+results.c2 <- FindVariableFeatures(results.c2, selection.method = "vst", nfeatures = 2000, verbose = FALSE)
+results.c2 <- ScaleData(results.c2, features = rownames(results.c2), verbose = FALSE)
+results.c2 <- RunPCA(results.c2, features = VariableFeatures(results.c2), verbose = FALSE)
+results.c2 <- RunUMAP(results.c2, dims = 1:10, verbose = FALSE)
+```
+
+
+```{r fig.width=10, fig.height=4}
+DimPlot(subset(results.c2, subset = group == "COPD"), split.by = "origin") + ggtitle("COPD")
+```
+
+```{r fig.width=10, fig.height=4}
+DimPlot(subset(results.c2, subset = group == "Fumer"), split.by = "origin") + ggtitle("Fumer")
+```
+
+```{r fig.width=10, fig.height=4}
+DimPlot(subset(results.c2, subset = group == "No fumer"), split.by = "origin") + ggtitle("Non fumer")
+```
+*Except the sample Hum10, other samples have relatively equal distribution of all subsets. the Hum10 represent two exceptional lower subsets.* 
+
+## Re-cluster the Cluster 3
+
+> REMIND: The cluster 3 in the manuscript referred to cluster 2 in the following codes. 
+
+```{r fig.height=4, fig.width=5}
+pal_4c.c2 <- c("#e09f3e", "#9e2a2b", "#540b0e", "#335c67")
+results.c2 <- FindNeighbors(results.c2, reduction = "pca", dims = 1:10, verbose = FALSE)
+results.c2 <- FindClusters(results.c2, resolution = 0.12, verbose = FALSE)
+p <- DimPlot(results.c2, cols = pal_4c.c2)
+p
+```
+```{r remove after render Fig6-UMAP, include=FALSE}
+ggsave(filename = "UMAPplot_recluster_C3.pdf",
+       path = "../../../Human_Monocytes/Rmd_production/Figures/", 
+       plot = p, 
+       height = 4, width = 5, 
+       device = "pdf")
+```
+
+Where is the DC-like population located? 
+
+```{r fig.height=4, fig.width=5.5}
+DimPlot(results.c2, cells.highlight = WhichCells(results.c2, expression = seurat_clusters_before_filter == "11"))
+```
+*Cluster 3 represents the old cluster 11 DC(-like).*
+
+```{r eval=FALSE}
+saveRDS(results.c2, file = "./cluster2_clustered.seuratObject.Rds")
+```
+
+
+## Statistic summary about the subpopulations in Cluster 3 (Mreg)
+
+Cell number of each cluster for each samples
+
+```{r}
+names.col <- unique(results.c2$origin)
+names.row <- as.character(0:3)
+df <- sapply(names.col, function(x) table(subset(results.c2, subset = origin == x)$seurat_clusters)[names.row])
+df <- as.data.frame(df)
+df
+```
+
+Distribution in %: 
+```{r}
+df <- apply(df, 2, function(x) round(x/sum(x)*100, 2) )
+df <- as.data.frame(df)
+df
+```
+
+
+```{r fig.height=4, fig.width=6}
+freq.celltype.list <- list(
+  Hum3_Non_Fumer = Seurat2CellFreqTable(subset(results.c2, subset = origin  == "LBA_Hum3"), slotName = "seurat_clusters"), 
+  Hum8_Non_Fumer = Seurat2CellFreqTable(subset(results.c2, subset = origin  == "LBA_Hum8"), slotName = "seurat_clusters"), 
+  Hum10_Non_Fumer = Seurat2CellFreqTable(subset(results.c2, subset = origin  == "LBA_Hum10"), slotName = "seurat_clusters"), 
+  Hum4_Fumer = Seurat2CellFreqTable(subset(results.c2, subset = origin  == "LBA_Hum4"), slotName = "seurat_clusters"), 
+  Hum5_Fumer = Seurat2CellFreqTable(subset(results.c2, subset = origin  == "LBA_Hum5"), slotName = "seurat_clusters"), 
+  Hum7_Fumer = Seurat2CellFreqTable(subset(results.c2, subset = origin  == "LBA_Hum7"), slotName = "seurat_clusters"),
+  Hum9_COPD = Seurat2CellFreqTable(subset(results.c2, subset = origin  == "LBA_Hum9"), slotName = "seurat_clusters"), 
+  Hum11_COPD = Seurat2CellFreqTable(subset(results.c2, subset = origin  == "LBA_Hum11"), slotName = "seurat_clusters"), 
+  Hum12_COPD = Seurat2CellFreqTable(subset(results.c2, subset = origin  == "LBA_Hum12"), slotName = "seurat_clusters")
+)
+p <- barChart(freq.celltype.list) + labs(fill = "Clusters in each sample") + 
+    scale_fill_manual(values = pal_4c.c2) + 
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+p
+```
+
+```{r remove after render Fig6-barplot, include=FALSE}
+ggsave(filename = "BarPlot_distribution_recluster_C3.pdf",
+       path = "../../../Human_Monocytes/Rmd_production/Figures/", 
+       plot = p, 
+       height = 4, width = 6, 
+       device = "pdf")
+```
+
+
+
+```{r fig.height=10, fig.width=10}
+DimPlot(results.c2, split.by = "origin", ncol = 3, cols = pal_4c.c2) 
+```
+
+## Functional markers in subpopulations of Cluster 3 (Mreg)
+
+```{r fig.width=10, fig.height=4}
+p <- DotPlot(results.c2, features = c("FCER1A", "CD1A", "CD1C", "CD1E", "CLEC10A",
+                                   "CCL18", "CCL4", "CCL3", "CXCL9", "CXCL10", "IL10",
+                                   "CALM1", "CALM2","CCND2","CCND3",
+                                   "FCGR2A","FCGR2B",
+                                   "ADGRE5", "AGA", "ITGAM", "CLEC12A", 
+                                   "ANXA11", "ARPC2", "ARPC5", "FCN1", "ICAM3"
+                                   ), 
+                    assay = "RNA", 
+                    scale.by = "size",
+                    cols = c("dark blue", "dark red")) +
+                    theme(axis.text.x = element_text(angle = 90,
+                    vjust = 0.5,
+                    hjust=1))
+p
+```
+
+```{r remove after render Fig6-dotplot, include=FALSE}
+ggsave(filename = "DotPlot_signatures_subpop_C3.pdf",
+       path = "../../../Human_Monocytes/Rmd_production/Figures/", 
+       plot = p, 
+       height = 4, width = 10, 
+       device = "pdf")
+```
+
+
+# Compare to Mould et al. 2020 
+
+Let's focus on the Fig 2C of the report Mould et al. 2021[@Mould2021]: 
+Mould, K. J. et al. Airspace macrophages and monocytes exist in transcriptionally distinct subsets in healthy adults. Am. J. Respir. Crit. Care Med. (2021) doi:10.1164/RCCM.202005-1989OC.
+
+```{r fig.width=10, fig.height=4}
+DotPlot(results.c2, features = c("MCEMP1", "INHBA", "FBP1", 
+                                 "IGF1", "C8B", "HP", 
+                                 "LYZ", "PLTP", "APOE",
+                                 "CCL18", "CD63", "GCHFR", 
+                                 "CDKN1A", "MALAT1", "FTL", 
+                                 "CD74", "SERF2", "RSAD2", "CMPK2",
+                                 "IFIT1", "GRN", "CYBA", "MARCO", "CXCL10", 
+                                 "CCL4", "CCL3", 
+                                 "MT1M", "MT1H", "MT1A"), 
+                    scale.by = "size",
+                    cols = c("dark blue", "dark red"))  + theme(axis.text.x =  element_text(angle = 45, hjust=1))+ 
+  ggtitle("Subpop Cluster 3 only")
+```
+
+
+How about in whole macrophages (not only cluster2)
+```{r fig.width=10, fig.height=4}
+DotPlot(results, features = c("MCEMP1", "INHBA", "FBP1", 
+                                 "IGF1", "C8B", "HP", 
+                                 "LYZ", "PLTP", "APOE",
+                                 "CCL18", "CD63", "GCHFR", 
+                                 "CDKN1A", "MALAT1", "FTL", 
+                                 "CD74", "SERF2", "RSAD2", "CMPK2",
+                                 "IFIT1", "GRN", "CYBA", "MARCO", "CXCL10", 
+                                 "CCL4", "CCL3", 
+                                 "MT1M", "MT1H", "MT1A"),
+                    scale.by = "size",
+                    cols = c("dark blue", "dark red")) + theme(axis.text.x =  element_text(angle = 45, hjust=1)) + 
+  ggtitle("Whole macrophages (C2 = Mreg)")
+```
+
+*Compare to Mould et al. Fig 2C, 1) the Mreg (C2 of whole macrophages) expresses higher cytokine, chemokines (CXCL10, CCL4, CCL3), thus may be the pro-inflammatory macrophage (m5) mentioned in their report; 2) Cluster 0 and cluster 1 are quite similar except IGF1 C8B HP, these 2 pops should represent continuous developmemt of AM. * 
+
+# Find DE genes in subpopulations of the cluster 3 (Mreg)
+
+```{r}
+all_cluster.markers <- FindAllMarkers(results.c2)
+```
+
+```{r fig.height=11, fig.width=6}
+require(dplyr)
+top20 <- all_cluster.markers %>% group_by(cluster) %>% top_n(n = 20, wt = avg_log2FC)
+DoHeatmap(results.c2, features = top20$gene, group.colors = pal_4c.c2
+          ) + NoLegend()
+```
+
+# Scoring of Mreg and AM signatures
+
+```{r message=FALSE, warning=FALSE}
+library(Seurat)
+library(VISION)
+library(ggplot2)
+```
+
+## Create signature from DE gene lists
+
+> The Mreg and AM signatures are the top 100 DE genes obtain from DESeq2 analysis with bulkRNAseq data (see bulkRNAseq_analysis for details). 
+
+```{r}
+sig <- read.table("./Mreg_MA_sig.csv", sep = "\t", header = T, as.is = T)
+sig <- sig[-1, ] # remove description
+sig <- as.data.frame(lapply(sig, unique), stringsAsFactors=FALSE) # remove doublon
+sig <- as.data.frame(sapply(sig, as.character), stringsAsFactors=FALSE)          # change to character    
+sig <- as.data.frame(sapply(sig, function(x) x <- x[! x == ""] ), stringsAsFactors=FALSE) # remove empty
+
+sig.Mreg <- c(rep(1, length(sig$Mreg_sig)))
+names(sig.Mreg) <- c(sig$Mreg_sig)
+
+sig.AM <- c(rep(1, length(sig$MA_sig)))
+names(sig.AM) <- c(sig$MA_sig)
+
+sig.Mreg <- createGeneSignature(name = "Mreg", sigData = sig.Mreg)
+sig.AM <- createGeneSignature(name = "AM", sigData = sig.AM)
+sig.macro <- c(sig.Mreg, sig.AM)
+```
+
+## Scoring for Mreg and AM signatures
+
+Let's calculate scores for the Mreg and AM signatures in either total macrophages and cells in cluster 3 (referred to C2 in the codes). 
+```{r}
+vis <- Vision(results, 
+              signatures = sig.macro)
+
+vis.c2 <- Vision(results.c2, 
+              signatures = sig.macro)
+```
+
+Calculate score: 
+```{r}
+vis <- calcSignatureScores(vis)
+vis.c2 <- calcSignatureScores(vis.c2)
+```
+
+## Present signature score with existing embedding in Seurat object 
+
+Check cell names are the same in both analyses. 
+```{r}
+identical(colnames(results), rownames(vis@SigScores))
+```
+```{r}
+identical(colnames(results.c2), rownames(vis.c2@SigScores))
+```
+
+```{r}
+results$sig.Mreg <- vis@SigScores[, "Mreg"]
+results$sig.AM <- vis@SigScores[, "AM"]
+
+results.c2$sig.Mreg <- vis.c2@SigScores[, "Mreg"]
+results.c2$sig.AM <- vis.c2@SigScores[, "AM"]
+```
+
+Plot signature scores with existing embedding in Seurat object: 
+
+```{r fig.width=5, fig.height=4}
+FeaturePlot(results, features = "sig.Mreg"
+            , min.cutoff = -0.45, max.cutoff = 0.3)
+```
+
+```{r fig.width=5, fig.height=4}
+FeaturePlot(results, features = "sig.AM"
+            , min.cutoff = -0.4, max.cutoff = 0.06)
+```
+
+```{r}
+VlnPlot(results, features = "sig.Mreg",  pt.size = 0, cols = pal_4c)
+```
+
+```{r}
+VlnPlot(results, features = "sig.AM",  pt.size = 0, cols = pal_4c)
+```
+
+```{r fig.width=5, fig.height=4}
+FeaturePlot(results.c2, features = "sig.Mreg"
+            , min.cutoff = -0.45, max.cutoff = 0.3)
+```
+
+```{r fig.width=5, fig.height=4}
+FeaturePlot(results.c2, features = "sig.AM"
+            , min.cutoff = -0.4, max.cutoff = 0.06)
+```
+
+```{r}
+VlnPlot(results.c2, features = "sig.Mreg",  pt.size = 0, cols = pal_4c.c2)
+```
+
+```{r}
+VlnPlot(results.c2, features = "sig.AM",  pt.size = 0, cols = pal_4c.c2)
 ```
 
 
@@ -37,4 +473,6 @@ results <- readRDS(file = "./so.merged_clusters.seuratObject.Rds")
 ```{r}
 sessionInfo()
 ```
+
+# References
 

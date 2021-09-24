@@ -1,0 +1,371 @@
+---
+title: "6-Single-cell RNA velocity estimation"
+bibliography: bib.bib
+link-citations: yes
+date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
+output: 
+  pdf_document:
+    pandoc_args: 
+      - '../../common.yaml'
+      - --listings
+    includes: 
+      in_header: '../../preamble.tex'
+    toc: true
+    number_sections: true
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    df_print: tibble
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+
+\newpage
+
+# Description
+
+For each sample, the counts for unspliced- and ambiguous transcripts were calculated from CellRanger output using velocyto command-line tool (http://velocyto.org)[@LaManno2018] and saved in loom files. The single-cell RNA velocities were estimated using scVelo toolkit (https://scvelo.readthedocs.io)[@Bergen2020]. Briefly, the loom files were used as input for scVelo analysis. Genes with minimum 20 of both unspliced and spliced counts and on the top list of 2000 genes were filtered, normalized and log transformed (scv.pp.filter_and_normalize
+with default parameters). Thirty principal components (PCs) and 30 neighbors obtained from euclidean distances in PCA space were used for computing first-/second-order moments for each cell. We used generalized dynamical modeling to recover the full splicing kinetics of spliced genes and the single-cell RNA velocities were plotted with the same cluster labels and embedding as in Fig4A. 
+
+# Load data and packages 
+
+
+# load data
+```{r message=FALSE}
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+library(loomR)
+suppressMessages(library(tidyverse))
+
+
+obj.combined <- readRDS("../4 - cell typing and filtering/so.merged_clusters.seuratObject.Rds")
+```
+
+# prepare data RNAvelocyto:
+```{r}
+list.name.so <- unique(obj.combined$origin)
+list.name.sample <- list.name.so
+
+for (i in 1:length(list.name.so)) {
+  so <- obj.combined[, obj.combined$origin == list.name.so[i]]
+  assign(paste(list.name.sample[i], "seuratObject", sep = "."), so)
+}
+
+list.name.so <- paste(list.name.sample, "seuratObject", sep = ".")
+
+obj.list <- list()
+for (name.so in list.name.so) {
+  obj.list <- c(obj.list, get(name.so))
+}
+list.name.so <- sub(" ", "_", list.name.so)
+names(obj.list) <- list.name.so
+```
+
+# Generate loom files: 
+
+>IMPORTANT NOTE: In the new cellranger, the “outs” folder structure has been changed: 1. the new folder is called “filtered_feature_bc_matrix”, the old one is called “filtered_gene_bc_matrices”. 2. the data was in “mm10” subfolder, the new one is in “filtered_feature_bc_matrix” directly. 3. the new data are .gz compacted.
+
+# Take the loom files:
+
+```{r}
+suppressMessages(library("velocyto.R"))
+```
+
+```{r}
+list.path.loom <- list.dirs("../../../Counts/loom")
+list.path.loom <- list.path.loom[-1] # remove the first parent directory: Counts/loom/
+
+list.name.loom <- basename(list.path.loom)
+list.name.loom <- str_replace(list.name.loom, pattern = "-", replacement = "_")
+list.path.loom <- list.files(list.path.loom, pattern = "\\.loom$", full.names = TRUE)
+
+for (i in 1:length(list.name.loom)) {
+  assign(make.names(list.name.loom[i]), read.loom.matrices(list.path.loom[i]))
+}
+```
+```{r}
+list.name.loom <- make.names(list.name.loom)
+```
+
+make consistancy between cell names:
+
+```{r}
+# prepare the prefix for cell names
+prefix <- str_remove(list.name.loom, pattern = ".loom")
+source("~/Desktop/velocyto/Script/aggregateLoom.R")
+for (i in 1:length(list.name.loom)) {
+  loom <- get(list.name.loom[i])  
+  assign(list.name.loom[i], value = aggregateLoom(loom, Ori.ID = prefix[i]))
+}
+
+```
+
+## Filter loom with Seurat gene/cell list
+
+```{r}
+source("~/Desktop/velocyto/Script/filterLoom.R")
+
+# list.name.ldat <- paste(list.name.sample, "ldat", "filtered", sep = ".")
+ldat.list <- list()
+
+for (name.sample in list.name.sample) {
+  obj.name <- paste(name.sample, "seuratObject", sep = ".")
+  loom.name <- paste(name.sample, "loom", sep = ".")
+  ldat.name <- paste(name.sample, "ldat", "filtered", sep = ".")
+  
+  assign(ldat.name, 
+         value = filterLoom(loomObj = get(loom.name),
+                                geneList = rownames(obj.list[[obj.name]]),
+                                cellList = colnames(obj.list[[obj.name]])))
+}
+```
+*all have the same unfound genes.*
+*we have 15 genes in this list *
+
+so remove the redundant genes: 
+
+```{r}
+# remove inconsistent genes: 
+for (name.sample in list.name.sample) {
+  obj.name <- paste(name.sample, "seuratObject", sep = ".")
+  loom.name <- paste(name.sample, "loom", sep = ".")
+  ldat.name <- paste(name.sample, "ldat", "filtered", sep = ".")
+  genes.toRemove <- get(paste(name.sample, "ldat.filtered", sep = "."))
+    
+  genes <- rownames(obj.list[[obj.name]])
+  genes.new <- genes[-which(genes %in% genes.toRemove)]
+  
+  assign(ldat.name, 
+         value = filterLoom(loomObj = get(loom.name),
+                                geneList = genes.new,
+                                cellList = colnames(obj.list[[obj.name]]) ))
+
+  }
+```
+*LBA_Hum7 is done.*
+*some cells are not in other loom files. so remove them* 
+
+```{r}
+# remove inconsistent cells: 
+
+# important to skip the all-done sample: 
+list.name.sample.remained <- list.name.sample[!list.name.sample == "LBA_Hum7"]
+
+
+for (name.sample in list.name.sample.remained) {
+  obj.name <- paste(name.sample, "seuratObject", sep = ".")
+  loom.name <- paste(name.sample, "loom", sep = ".")
+  ldat.name <- paste(name.sample, "ldat", "filtered", sep = ".")
+  cells.toRemove <- get(paste(name.sample, "ldat.filtered", sep = "."))
+    
+  cellnames <- colnames(obj.list[[obj.name]])
+  cellnames.new <- cellnames[-which(cellnames %in% cells.toRemove)]
+  
+  assign(ldat.name, 
+         value = filterLoom(loomObj = get(loom.name),
+                                geneList = genes.new,
+                                cellList = cellnames.new ))
+
+  # now we have to also filter seurat object by new cells: 
+  assign(obj.name, 
+         value = obj.list[[obj.name]] [ , cellnames.new] )
+  }
+```
+
+make list: 
+
+
+```{r}
+obj <- list()
+
+for (name.sample in list.name.sample) {
+  obj.name <- paste(name.sample, "seuratObject", sep = ".")
+  ldat.name <- paste(name.sample, "ldat", "filtered", sep = ".")
+  
+  tmp <- list(ldat = get(ldat.name), seurat = get(obj.name) )
+  
+  obj[[name.sample]] <- tmp
+  }
+```
+
+save to file
+```{r}
+saveRDS(obj, file = "./obj.list.loom_surat.Rds")
+```
+
+# Group by treatment
+
+```{r}
+obj.all <- obj
+# now create merged seurat object and loom data. 
+
+# 1. merged seurat object. 
+list.name.sample <- names(obj.all)
+
+seurat.all <- list()
+ldat.all <- list()
+
+for (sample.name in list.name.sample) {
+  obj <- obj.all[[sample.name]]  
+  
+  seurat.all[[sample.name]] <- obj[["seurat"]]
+  ldat.all[[sample.name]] <- obj[["ldat"]]
+}
+
+# the following way doesn't conserve the dimension reduction. 
+# seurat.merge <- merge(x = seurat.all[[1]], 
+#                       y = unlist(seurat.all[2:length(seurat.all)]), 
+#                       merge.data = TRUE)
+
+# try to extract cellnames from the integrated seurat object: 
+seurat.combined <- readRDS("../4 - cell typing and filtering/so.merged_clusters.seuratObject.Rds")
+
+cellnames <- character()
+for (sample.name in list.name.sample) {
+  obj <- seurat.all[[sample.name]] 
+  
+  cellnames <- append(cellnames, colnames(obj))
+}
+
+seurat.merge <- seurat.combined[ , cellnames]
+```
+
+```{r}
+# 2. merged loom data; 
+# source("~/Desktop/velocyto/Script/aggregateLoom.R")
+
+i=1
+for (sample.name in list.name.sample) {
+  
+  obj <- ldat.all[[sample.name]] 
+  if (i==1) { 
+  spliced <- obj$spliced
+  unspliced <- obj$unspliced
+  ambiguous <- obj$ambiguous
+  } else {
+    spliced <- cbind(spliced, obj$spliced)
+    unspliced <- cbind(unspliced, obj$unspliced) # note: previous code here was wrong. 
+    ambiguous <- cbind(ambiguous, obj$ambiguous) # note: previous code here was wrong. 
+  }
+    
+  i=1+1
+}
+
+ldat.merge <- list(spliced=spliced, 
+                   unspliced=unspliced, 
+                   ambiguous=ambiguous)
+```
+
+```{r}
+dim(ldat.all[[1]]$spliced)
+```
+
+```{r}
+dim(ldat.merge$spliced)
+```
+*Good, gene number doesn’t change.*
+
+Now separate them by whatever you want: let’s start by treatment
+
+```{r}
+groupBy <- "group"
+sample.groupBy <- unique(seurat.merge@meta.data[[groupBy]])
+
+obj <- list()
+for (sample.name in sample.groupBy) {
+  seurat <- seurat.merge[ , seurat.merge@meta.data[[groupBy]] == sample.name]
+  cellnames <- colnames(seurat)
+  ldat <- list(spliced = ldat.merge$spliced[, cellnames], 
+               unspliced = ldat.merge$unspliced[, cellnames],
+               ambiguous = ldat.merge$ambiguous[, cellnames])
+  obj[[sample.name]] <- list(ldat=ldat, 
+                             seurat=seurat)
+}
+```
+
+make idents:
+```{r}
+# for some reason, the idents have not been channged. so do it here: 
+# for (sample.name in sample.groupBy) {
+#   so <- obj[[sample.name]][["seurat"]]
+#   Idents(so) <- "integrated_snn_res.0.2"
+#   obj[[sample.name]][["seurat"]] <- so
+# }
+
+```
+
+# Velocity estimation
+
+```{r}
+# order of samples: 
+names(obj)
+```
+
+```{r}
+# set par to defaul: 
+pal_4c <- c("#2E359A", "#FC990E", "#720D0D", "#6E9BD8") # new pal 20201214 bis
+
+obj.velocito.grid <- lapply(obj, function(x) {
+  # here use splice and unsplice data.
+emat <- x[["ldat"]]$spliced
+nmat <- x[["ldat"]]$unspliced
+
+cell.col <- as.character(factor(Idents(x[["seurat"]]), labels = pal_4c))
+names(cell.col) <- colnames(x[["seurat"]])
+# use Seurat embedding: 
+emb <- Embeddings(object = x[["seurat"]], reduction = "umap")
+
+# use cluster lable from Seurat: 
+cluster.label <- Idents(x[["seurat"]])
+
+# use umap distance created in Seurat: 
+cell.dist <- as.dist(1-armaCor(t(Embeddings(object = x[["seurat"]], reduction = "pca"))))
+
+# Calculate velocity from spliced/unspliced expression: 
+emat <- filter.genes.by.cluster.expression(emat,cluster.label,min.max.cluster.average = 0.5)
+nmat <- filter.genes.by.cluster.expression(nmat,cluster.label,min.max.cluster.average = 0.05)
+
+# variantFeatures <- VariableFeatures(FindVariableFeatures(x[["seurat"]], nfeatures = 1000))
+# emat <- emat[rownames(emat) %in% variantFeatures, ]
+# nmat <- nmat[rownames(nmat) %in% variantFeatures, ]
+
+# number of cells to analysis: 
+length(intersect(rownames(emat),rownames(emat)))
+
+# parameters for velocity estimation: 
+fit.quantile <- 0.02
+rvel.cd <- gene.relative.velocity.estimates(emat,nmat,deltaT=1,kCells=20,cell.dist=cell.dist,fit.quantile=fit.quantile)
+
+
+
+# Visualize velocity on the t-SNE embedding, using velocity vector fields:
+# show grid movement: 
+show.velocity.on.embedding.cor(emb,rvel.cd,n=300,scale='sqrt',
+                               cell.colors=cell.col,
+                               cex=0.8, 
+                               show.grid.flow=TRUE,    
+                               min.grid.cell.mass=0.5,
+                               grid.n=40,arrow.lwd=1,do.par=F,cell.border.alpha = 0.1, return.details = TRUE)
+
+} )
+
+```
+
+Save data: 
+
+```{r}
+saveRDS(obj, file = "./obj_group_by_group.list.loom_surat.Rds")
+```
+
+
+# Session information 
+```{r}
+sessionInfo()
+```
+
+# References
+

@@ -1,6 +1,6 @@
 ---
 title: "2-DESeq2 analysis"
-# bibliography: bib.bib
+bibliography: bib.bib
 link-citations: yes
 date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
 output: 
@@ -18,18 +18,178 @@ output:
     df_print: tibble
 ---
 
+```{r include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
 
 \newpage
 
 # Description
-RNA-seq data were analyzed using R Bioconductor (3.5.1) and DESeq2 package (version 1.26.0) [@DESeq2]. 
+RNA-seq data were analyzed using R Bioconductor (3.5.1) and DESeq2 package (version 1.26.0)[@DESeq2]. 
+
+# Load packages and data
+
+```{r}
+library(DESeq2)
+library(ggplot2)
+library(pheatmap)
+library(RColorBrewer)
+library(EnhancedVolcano)
+library(forcats)
+```
+
+Counts data are also accessible in NCBI GEO under accession number GSE183973. 
+
+```{r}
+COUNTS <- read.table("./merged_gene_counts.txt",sep="\t", header=T, row.names = NULL)
+
+dim(COUNTS)
+```
+
+Make gene names as rownames: 
+```{r}
+Genes <- COUNTS$gene_name
+rownames(COUNTS) = make.names(Genes, unique=TRUE)
+
+COUNTS <- COUNTS[,-c(1:2)]
+head(COUNTS, 3)
+
+```
+
+Arrange the sample order to have the right group order: Healthy, Smoker and COPD. 
+
+```{r}
+COUNTS <- COUNTS [,c(4,1,15,7,12,21,26,17,27,3,13,24,6,23,18,10,19,20,2,22,9,8,14,5,16,25,11)]
+```
+
+# Make metadata for bulkRNAseq samples 
+
+```{r}
+colnames(COUNTS) <- c("Healthy_1_Mono", "Healthy_1_cAM", "Healthy_1_sAM", "Healthy_2_Mono", "Healthy_2_cAM", "Healthy_2_sAM", "Healthy_3_Mono", "Helathy_3_cAM", "Healthy_3_sAM", "Smoker_1_Mono", "Smoker_1_cAM", "Smoker_1_sAM", "Smoker_2_Mono", "Smoker_2_cAM", "Smoker_2_sAM", "Smoker_3_Mono", "Smoker_3_cAM", "Smoker_3_sAM", "COPD_1_Mono", "COPD_1_cAM", "COPD_1_sAM","COPD_2_Mono", "COPD_2_cAM", "COPD_2_sAM", "COPD_3_Mono","COPD_3_cAM", "COPD_3_sAM")
+
+SampleSheet <- data.frame(
+  "Treatment" = rep(c("Healthy","Smoker","COPD"),each=9),
+  
+  "Cells" = rep(c("Monocytes","AFhi cAM","AFlo AM"),3)
+)
+
+SampleSheet
+```
+
+```{r}
+rownames(SampleSheet) <- colnames(COUNTS)
+SampleSheet
+```
+
+# DESeq2
+
+```{r}
+dds <- DESeqDataSetFromMatrix(
+  countData= COUNTS,
+  colData= SampleSheet,
+  design= ~ Cells + Treatment
+)
+
+dds
+```
+
+## Perform rlog transformation for distances and PCA
+
+```{r}
+# keep only genes with more than a single read
+dds <- dds[ rowSums(counts(dds)) > 1,]
+
+# perform rlog transformation for distances (for clustering) and PCA
+rld<-rlog(dds)
+```
+
+```{r}
+dds <- dds[ rowSums(counts(dds)) > 1,]
+nrow(dds)
+```
 
 
-# Load data: 
+Calculate sample-to-sammple distances
 
+```{r}
+sampleDists <- dist( t( assay(rld) ) )
+sampleDistMatrix <- as.matrix( sampleDists ) 
+```
+
+## Heatmap
+
+```{r fig.width=8, fig.height=8}
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255) 
+heatmap <- pheatmap(sampleDistMatrix,
+                    clustering_distance_rows=sampleDists,
+                    clustering_distance_cols=sampleDists,
+                    col=colors
+)
+```
+
+## PCA analysis
+
+```{r}
+plotPCA <- plotPCA(rld, intgroup = c("Cells","Treatment"))
+plotPCA
+```
+
+## Differentially expressed (DE) genes in comparing AFlo vs AFhi alveolar macrophages
+
+```{r}
+dds1 <- DESeq(dds)
+res_AFlo_vs_AFhi<- results(dds1, contrast=c("Cells","AFlo AM","AFhi cAM"), lfcThreshold = 1, alpha = 0.05)
+summary(res_AFlo_vs_AFhi) 
+```
+
+```{r}
+Res_AFlo_vs_AFhi_Shrunk <- lfcShrink(dds1, contrast=c("Cells","AFlo AM","AFhi cAM"), res=res_AFlo_vs_AFhi, type = "normal")
+
+AFlo_vs_AFhi <- merge(x=as.data.frame(res_AFlo_vs_AFhi), y=as.data.frame(Res_AFlo_vs_AFhi_Shrunk), by=c(0,1))
+
+head(AFlo_vs_AFhi)
+```
+
+
+```{r}
+
+```
+
+# Export DE genes for other analyses
+
+```{r}
+Genes2 <- AFlo_vs_AFhi$Row.names
+head(Genes2, 3)
+```
+
+```{r}
+rownames(AFlo_vs_AFhi) = make.names(Genes2, unique=TRUE)
+AFlo_vs_AFhi<- AFlo_vs_AFhi[,-1]
+```
+
+
+Filter
+```{r}
+AFlo_vs_AFhi <- AFlo_vs_AFhi[!is.na(AFlo_vs_AFhi$padj.y),]
+AFlo_vs_AFhi_1 <- subset(AFlo_vs_AFhi, padj.y < 0.05)
+dim(AFlo_vs_AFhi_1)
+```
+
+```{r}
+AFlo_vs_AFhi_ordered <- AFlo_vs_AFhi_1[order(-AFlo_vs_AFhi_1$log2FoldChange.y) , ]
+AFlo_vs_AFhi_ordered
+```
+
+Save data for other analyses
+
+```{r eval=FALSE}
+write.table(as.data.frame(AFlo_vs_AFhi_ordered), "Results_Mreg_MA_LFC_9patients.txt", sep="\t", row.names=T,col.names=T)
+
+```
 
 
 # Session information
+
 ```{r}
 sessionInfo()
 ```

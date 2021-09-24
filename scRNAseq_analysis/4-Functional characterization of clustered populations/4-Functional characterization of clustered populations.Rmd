@@ -39,7 +39,7 @@ Notice: The cluster 1/2/3/4 in the manuscript referred to cluster 0/1/2/3 in the
 ```{r eval=FALSE}
 suppressMessages(library(Seurat))
 suppressMessages(library(dplyr))
-results <- readRDS(file = "./so.merged_clusters.seuratObject.Rds")
+results <- readRDS(file = "../3-Merge and cell typing/so.merged_clusters.seuratObject.Rds")
 ```
 
 ```{r include=FALSE}
@@ -96,7 +96,7 @@ p <- DotPlot(results, features = c("MRC1", "CD68", 	"MARCO", "LYZ", "FCGR3A", # 
                               "MKI67", "PCLAF" , "CDK1" # Cluster 4 upregulated cycling-related genes
                             ), assay = "RNA", 
                     scale.by = "size",
-                    cols = c("dark blue", "dark red")) +
+                    cols = c("dark blue", "red")) +
                     theme(axis.text.x = element_text(angle = 90,
                     vjust = 0.5,
                     hjust=1))
@@ -120,7 +120,7 @@ p <- DotPlot(results, features = c("CYBB", "CYP1B1", "CYGB",
                                    "PLA2G7", "ATP6V0D2", "CHI3L1", "ITGA6", "SPP1", "MMP12"),
                     assay = "RNA", 
                     scale.by = "size",
-                    cols = c("dark blue", "dark red")) +
+                    cols = c("dark blue", "red")) +
                     theme(axis.text.x = element_text(angle = 90,
                     vjust = 0.5,
                     hjust=1))
@@ -296,7 +296,7 @@ p <- DotPlot(results.c2, features = c("FCER1A", "CD1A", "CD1C", "CD1E", "CLEC10A
                                    ), 
                     assay = "RNA", 
                     scale.by = "size",
-                    cols = c("dark blue", "dark red")) +
+                    cols = c("dark blue", "red")) +
                     theme(axis.text.x = element_text(angle = 90,
                     vjust = 0.5,
                     hjust=1))
@@ -311,6 +311,30 @@ ggsave(filename = "DotPlot_signatures_subpop_C3.pdf",
        device = "pdf")
 ```
 
+With another marker list
+```{r fig.width=9, fig.height=4}
+p <- DotPlot(results.c2, features = c("FCER1A", "CD1A", "CD1C", "CD1E", "CLEC10A",
+                                      "SPP1", "SELENOP", "MMP9", "MARCKS", "LGMN", "FOLR2", 
+                                   "CCL18", "CCL20", "CCL4", "CCL3", "CXCL9", "CXCL10", "IL10",
+                                   "CCR2", "CSF1R", "FCN1",
+                                   "CLEC5A", "VCAN"
+                                   ), 
+                    assay = "RNA", 
+                    scale.by = "size",
+                    cols = c("dark blue", "red")) +
+                    theme(axis.text.x = element_text(angle = 90,
+                    vjust = 0.5,
+                    hjust=1))
+p
+```
+
+```{r remove after render Fig6-dotplot bis, include=FALSE}
+ggsave(filename = "DotPlot_signatures_bis_subpop_C3.pdf",
+       path = "../../../Human_Monocytes/Rmd_production/Figures/", 
+       plot = p, 
+       height = 4, width = 10, 
+       device = "pdf")
+```
 
 # Compare to Mould et al. 2020 
 
@@ -328,7 +352,7 @@ DotPlot(results.c2, features = c("MCEMP1", "INHBA", "FBP1",
                                  "CCL4", "CCL3", 
                                  "MT1M", "MT1H", "MT1A"), 
                     scale.by = "size",
-                    cols = c("dark blue", "dark red"))  + theme(axis.text.x =  element_text(angle = 45, hjust=1))+ 
+                    cols = c("dark blue", "red"))  + theme(axis.text.x =  element_text(angle = 45, hjust=1))+ 
   ggtitle("Subpop Cluster 3 only")
 ```
 
@@ -345,7 +369,7 @@ DotPlot(results, features = c("MCEMP1", "INHBA", "FBP1",
                                  "CCL4", "CCL3", 
                                  "MT1M", "MT1H", "MT1A"),
                     scale.by = "size",
-                    cols = c("dark blue", "dark red")) + theme(axis.text.x =  element_text(angle = 45, hjust=1)) + 
+                    cols = c("dark blue", "red")) + theme(axis.text.x =  element_text(angle = 45, hjust=1)) + 
   ggtitle("Whole macrophages (C2 = Mreg)")
 ```
 

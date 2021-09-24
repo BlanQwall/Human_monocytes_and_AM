@@ -27,31 +27,42 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 
 # Description
 
-For each sample, the counts for unspliced- and ambiguous transcripts were calculated from CellRanger output using velocyto command-line tool (http://velocyto.org)[@LaManno2018] and saved in loom files. The single-cell RNA velocities were estimated using scVelo toolkit (https://scvelo.readthedocs.io)[@Bergen2020]. Briefly, the loom files were used as input for scVelo analysis. Genes with minimum 20 of both unspliced and spliced counts and on the top list of 2000 genes were filtered, normalized and log transformed (scv.pp.filter_and_normalize
-with default parameters). Thirty principal components (PCs) and 30 neighbors obtained from euclidean distances in PCA space were used for computing first-/second-order moments for each cell. We used generalized dynamical modeling to recover the full splicing kinetics of spliced genes and the single-cell RNA velocities were plotted with the same cluster labels and embedding as in Fig4A. 
+For each sample, the counts for unspliced- and ambiguous transcripts were calculated from CellRanger output using velocyto command-line tool (http://velocyto.org)[@LaManno2018] and saved in loom files. The single-cell RNA velocities were estimated using scVelo toolkit (https://scvelo.readthedocs.io)[@Bergen2020]. Briefly, the loom files were used as input for scVelo analysis. Genes with minimum 20 of both unspliced and spliced counts and on the top list of 2000 genes were filtered, normalized and log transformed (scv.pp.filter_and_normalize with default parameters). Thirty principal components (PCs) and 30 neighbors obtained from euclidean distances in PCA space were used for computing first-/second-order moments for each cell. We used generalized dynamical modeling to recover the full splicing kinetics of spliced genes and the single-cell RNA velocities were plotted with the same cluster labels and embedding as in Fig4A. 
 
 # Load data and packages 
 
-
-# load data
-```{r message=FALSE}
+```{r eval=FALSE}
 library(Seurat)
 library(ggplot2)
 library(dplyr)
 library(loomR)
-suppressMessages(library(tidyverse))
+library(tidyverse)
 
 
-obj.combined <- readRDS("../4 - cell typing and filtering/so.merged_clusters.seuratObject.Rds")
+seurat.combined <- readRDS(file = "../3-Merge and cell typing/so.merged_clusters.seuratObject.Rds")
 ```
 
-# prepare data RNAvelocyto:
+```{r, remove after render-load data, include=FALSE}
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+library(loomR)
+library(tidyverse)
+
+
+seurat.combined <- readRDS(file = "../../../Human_Monocytes/4 - cell typing and filtering/so.merged_clusters.seuratObject.Rds")
+```
+
+# Prepare data RNAvelocyto
+
+Prepare individual Seurat objects for each sample. 
+
 ```{r}
-list.name.so <- unique(obj.combined$origin)
+list.name.so <- unique(seurat.combined$origin)
 list.name.sample <- list.name.so
 
 for (i in 1:length(list.name.so)) {
-  so <- obj.combined[, obj.combined$origin == list.name.so[i]]
+  so <- seurat.combined[, seurat.combined$origin == list.name.so[i]]
   assign(paste(list.name.sample[i], "seuratObject", sep = "."), so)
 }
 
@@ -65,19 +76,41 @@ list.name.so <- sub(" ", "_", list.name.so)
 names(obj.list) <- list.name.so
 ```
 
-# Generate loom files: 
+## Generate loom files: 
 
->IMPORTANT NOTE: In the new cellranger, the “outs” folder structure has been changed: 1. the new folder is called “filtered_feature_bc_matrix”, the old one is called “filtered_gene_bc_matrices”. 2. the data was in “mm10” subfolder, the new one is in “filtered_feature_bc_matrix” directly. 3. the new data are .gz compacted.
+> The intermediate loom files were too big to be uploaded to the platform but they can be produced by the following steps. 
 
-# Take the loom files:
+We counted unspliced- and ambiguous transcripts using velocyto command-line tool (http://velocyto.org)[@LaManno2018]. 
 
-```{r}
-suppressMessages(library("velocyto.R"))
+For each sample, the following code was used to generate the loom file: 
+
+```{bash eval=FALSE}
+velocyto run 	-b "${sampleID}/outs/filtered_feature_bc_matrix/barcodes.tsv.gz" \
+ 				      -o "outputDir/${sampleID}.loom" \
+ 				      "${sampleID}/outs/possorted_genome_bam.bam" \
+ 				      /refdata-cellranger-GRCh38-3.0.0/genes/genes.gtf
 ```
 
+- `${sampleID}` is the sample ID. 
+- `${sampleID}/outs` is the output directory of CellRanger. 
+- `${sampleID}/outs/possorted_genome_bam.bam` is the BAM file generated from CellRanger. 
+- `/refdata-cellranger-GRCh38-3.0.0/genes/genes.gtf` is the gene reference used for Cellranger counts. 
+
+## Read loom files and prepare cellnames
+
+```{r eval=FALSE}
+suppressMessages(library("velocyto.R"))
+list.path.loom <- list.dirs("outputDir/loom")
+```
+
+```{r include=FALSE}
+suppressMessages(library("velocyto.R"))
+list.path.loom <- list.dirs("../../../../Counts/loom")
+```
+
+Read loom files and create loom objects under sample names
 ```{r}
-list.path.loom <- list.dirs("../../../Counts/loom")
-list.path.loom <- list.path.loom[-1] # remove the first parent directory: Counts/loom/
+list.path.loom <- list.path.loom[-1] # remove the first entry which is parent directory
 
 list.name.loom <- basename(list.path.loom)
 list.name.loom <- str_replace(list.name.loom, pattern = "-", replacement = "_")
@@ -91,12 +124,15 @@ for (i in 1:length(list.name.loom)) {
 list.name.loom <- make.names(list.name.loom)
 ```
 
-make consistancy between cell names:
+Make cell names consistent in both loom objects and Seurat objects.
 
 ```{r}
-# prepare the prefix for cell names
+# A prefix was added to each cell in Seurat objects during merge step. We should also add prefix to each cell. 
+
 prefix <- str_remove(list.name.loom, pattern = ".loom")
-source("~/Desktop/velocyto/Script/aggregateLoom.R")
+
+# Add prefix to cellnames. 
+source("../../R/aggregateLoom.R")
 for (i in 1:length(list.name.loom)) {
   loom <- get(list.name.loom[i])  
   assign(list.name.loom[i], value = aggregateLoom(loom, Ori.ID = prefix[i]))
@@ -104,12 +140,13 @@ for (i in 1:length(list.name.loom)) {
 
 ```
 
-## Filter loom with Seurat gene/cell list
+## Filter cellnames and feature names in loom with Seurat gene/cell list
+
+As the Seurat object contains only filtered cells and genes, the genes and cells in loom files should be also filtered. 
 
 ```{r}
-source("~/Desktop/velocyto/Script/filterLoom.R")
+source("../../R/filterLoom.R")
 
-# list.name.ldat <- paste(list.name.sample, "ldat", "filtered", sep = ".")
 ldat.list <- list()
 
 for (name.sample in list.name.sample) {
@@ -123,13 +160,12 @@ for (name.sample in list.name.sample) {
                                 cellList = colnames(obj.list[[obj.name]])))
 }
 ```
-*all have the same unfound genes.*
-*we have 15 genes in this list *
 
-so remove the redundant genes: 
+*All the samples have the same unfound genes (15 genes with redundant symbols). *
+
+Remove the redundant genes: 
 
 ```{r}
-# remove inconsistent genes: 
 for (name.sample in list.name.sample) {
   obj.name <- paste(name.sample, "seuratObject", sep = ".")
   loom.name <- paste(name.sample, "loom", sep = ".")
@@ -146,12 +182,12 @@ for (name.sample in list.name.sample) {
 
   }
 ```
-*LBA_Hum7 is done.*
-*some cells are not in other loom files. so remove them* 
+
+*Except LBA_Hum7, other loomsome cells are not in other loom files. So remove them.* 
+
+Remove cells that not in Seurat object. 
 
 ```{r}
-# remove inconsistent cells: 
-
 # important to skip the all-done sample: 
 list.name.sample.remained <- list.name.sample[!list.name.sample == "LBA_Hum7"]
 
@@ -176,8 +212,7 @@ for (name.sample in list.name.sample.remained) {
   }
 ```
 
-make list: 
-
+Make list of Seurat objects and ldat objects, each under ther sample same.
 
 ```{r}
 obj <- list()
@@ -192,12 +227,17 @@ for (name.sample in list.name.sample) {
   }
 ```
 
-save to file
-```{r}
+Save for other analyses.
+
+```{r eval=FALSE}
 saveRDS(obj, file = "./obj.list.loom_surat.Rds")
 ```
 
-# Group by treatment
+
+## Group loom/Seurat objects by treatment
+
+Merge all Seurat objects to one, with only filtered cells. 
+Merge all ldat objects to one, with only filtered cells. 
 
 ```{r}
 obj.all <- obj
@@ -215,14 +255,6 @@ for (sample.name in list.name.sample) {
   seurat.all[[sample.name]] <- obj[["seurat"]]
   ldat.all[[sample.name]] <- obj[["ldat"]]
 }
-
-# the following way doesn't conserve the dimension reduction. 
-# seurat.merge <- merge(x = seurat.all[[1]], 
-#                       y = unlist(seurat.all[2:length(seurat.all)]), 
-#                       merge.data = TRUE)
-
-# try to extract cellnames from the integrated seurat object: 
-seurat.combined <- readRDS("../4 - cell typing and filtering/so.merged_clusters.seuratObject.Rds")
 
 cellnames <- character()
 for (sample.name in list.name.sample) {
@@ -260,16 +292,7 @@ ldat.merge <- list(spliced=spliced,
                    ambiguous=ambiguous)
 ```
 
-```{r}
-dim(ldat.all[[1]]$spliced)
-```
-
-```{r}
-dim(ldat.merge$spliced)
-```
-*Good, gene number doesn’t change.*
-
-Now separate them by whatever you want: let’s start by treatment
+Now separate them by group. 
 
 ```{r}
 groupBy <- "group"
@@ -287,84 +310,178 @@ for (sample.name in sample.groupBy) {
 }
 ```
 
-make idents:
-```{r}
-# for some reason, the idents have not been channged. so do it here: 
-# for (sample.name in sample.groupBy) {
-#   so <- obj[[sample.name]][["seurat"]]
-#   Idents(so) <- "integrated_snn_res.0.2"
-#   obj[[sample.name]][["seurat"]] <- so
-# }
+OPTIONAL: save data for other presentations
 
-```
-
-# Velocity estimation
-
-```{r}
-# order of samples: 
-names(obj)
-```
-
-```{r}
-# set par to defaul: 
-pal_4c <- c("#2E359A", "#FC990E", "#720D0D", "#6E9BD8") # new pal 20201214 bis
-
-obj.velocito.grid <- lapply(obj, function(x) {
-  # here use splice and unsplice data.
-emat <- x[["ldat"]]$spliced
-nmat <- x[["ldat"]]$unspliced
-
-cell.col <- as.character(factor(Idents(x[["seurat"]]), labels = pal_4c))
-names(cell.col) <- colnames(x[["seurat"]])
-# use Seurat embedding: 
-emb <- Embeddings(object = x[["seurat"]], reduction = "umap")
-
-# use cluster lable from Seurat: 
-cluster.label <- Idents(x[["seurat"]])
-
-# use umap distance created in Seurat: 
-cell.dist <- as.dist(1-armaCor(t(Embeddings(object = x[["seurat"]], reduction = "pca"))))
-
-# Calculate velocity from spliced/unspliced expression: 
-emat <- filter.genes.by.cluster.expression(emat,cluster.label,min.max.cluster.average = 0.5)
-nmat <- filter.genes.by.cluster.expression(nmat,cluster.label,min.max.cluster.average = 0.05)
-
-# variantFeatures <- VariableFeatures(FindVariableFeatures(x[["seurat"]], nfeatures = 1000))
-# emat <- emat[rownames(emat) %in% variantFeatures, ]
-# nmat <- nmat[rownames(nmat) %in% variantFeatures, ]
-
-# number of cells to analysis: 
-length(intersect(rownames(emat),rownames(emat)))
-
-# parameters for velocity estimation: 
-fit.quantile <- 0.02
-rvel.cd <- gene.relative.velocity.estimates(emat,nmat,deltaT=1,kCells=20,cell.dist=cell.dist,fit.quantile=fit.quantile)
-
-
-
-# Visualize velocity on the t-SNE embedding, using velocity vector fields:
-# show grid movement: 
-show.velocity.on.embedding.cor(emb,rvel.cd,n=300,scale='sqrt',
-                               cell.colors=cell.col,
-                               cex=0.8, 
-                               show.grid.flow=TRUE,    
-                               min.grid.cell.mass=0.5,
-                               grid.n=40,arrow.lwd=1,do.par=F,cell.border.alpha = 0.1, return.details = TRUE)
-
-} )
-
-```
-
-Save data: 
-
-```{r}
+```{r eval=FALSE}
 saveRDS(obj, file = "./obj_group_by_group.list.loom_surat.Rds")
 ```
 
 
+# scVelo analysis
+
+## Correct NA in Seurat Metadata
+
+```{r, Correct NA in Seurat Metadata, message=FALSE, warning=FALSE}
+ obj <- lapply(obj, function(x)
+{
+  obj <- x[["seurat"]]
+  ldat <- x[["ldat"]]
+    for(j in 1:ncol(obj@meta.data)){
+          if(is.factor(obj@meta.data[,j]) == T){
+          obj@meta.data[,j][is.na(obj@meta.data[,j])] <- "N.A"
+      }
+          if(is.character(obj@meta.data[,j]) == T){
+          obj@meta.data[,j][is.na(obj@meta.data[,j])] <- "N.A"
+      }
+      }
+  x[["seurat"]] <- obj
+  x[["ldat"]] <- ldat
+  
+  return(x)
+}
+  )
+```
+
+## Make loom file from Seurat/loom object 
+
+To facilitate the work, we optimized Seurat `Convert` function to merge a Seurat/Loom list to one Loom file, containing the var matrix with spliced, unspliced layers and obs with all embedding, tsne, umap, pca, clustering, etc. 
+A Loom file issue from the function above `Convert.seurat_loom` will be saved in the current working folder.
+
+For "Non fumer" 
+
+```{r eval=FALSE}
+library(loomR)
+source("../../R/Convert_Seurat_loom.R")
+obj.sl <- obj$`No fumer`
+pfile <- Convert.seurat_loom(from = obj.sl, to = "loom", filename = "No_Fumer.loom" )
+pfile$close_all()
+```
+
+For "Fumer":
+
+```{r eval=FALSE}
+obj.sl <- obj$Fumer
+pfile <- Convert.seurat_loom(from = obj.sl, to = "loom", filename = "Fumer.loom" )
+pfile$close_all()
+```
+
+For "COPD":
+
+```{r eval=FALSE}
+obj.sl <- obj$COPD
+pfile <- Convert.seurat_loom(from = obj.sl, to = "loom", filename = "COPD.loom" )
+pfile$close_all()
+```
+
+## scVelo analysis with dynamical model
+
+> For the details in the estimation of single-cell RNA velocity using dynamical model, refer to the original report[@Bergen2020]: 
+
+> Bergen, V., Lange, M., Peidli, S., Wolf, F. A. & Theis, F. J. Generalizing RNA velocity to transient cell states through dynamical modeling. Nat. Biotechnol. (2020) doi:10.1038/s41587-020-0591-3.
+
+The following codes were used to calculate scRNA velocity and presenting with the existing embedding and labels. 
+
+### For "Non-fumer"
+
+```{python eval=FALSE}
+# python below
+import scvelo as scv
+scv.settings.verbosity = 3  # show errors(0), warnings(1), info(2), hints(3)
+scv.settings.presenter_view = True  # set max width size for presenter view
+scv.set_figure_params('scvelo')  # for beautified visualization
+
+# load data
+ldata_basal = scv.read("./No_Fumer.loom")
+
+# Preprocess the Data
+scv.pp.filter_and_normalize(ldata_basal, min_shared_counts=20, n_top_genes=2000)
+scv.pp.moments(ldata_basal, n_pcs=30, n_neighbors=30)
+
+# Estimate RNA velocity with dynamical model
+scv.tl.recover_dynamics(ldata_basal)
+scv.tl.velocity(ldata_basal, mode='dynamical')
+scv.tl.velocity_graph(ldata_basal)
+scv.pl.velocity_embedding_stream(ldata_basal, basis='umap_cell_embeddings', color='seurat_clusters', 
+                                 figsize=(10,10), components='1,2', 
+                                 palette=["#2E359A", "#FC990E", "#720D0D", "#6E9BD8"], 
+                                 linewidth=1.4, 
+                                 title="scVelo analysis", save="No_Fumer.png"
+                                )
+```
+![scVelo results for "Non fumer" grouped sample](Results/scvelo_No_Fumer.png)
+
+### For "Fumer"
+
+```{python eval=FALSE}
+# load data
+ldata_basal = scv.read("./Fumer.loom")
+
+# Preprocess the Data
+scv.pp.filter_and_normalize(ldata_basal, min_shared_counts=20, n_top_genes=2000)
+scv.pp.moments(ldata_basal, n_pcs=30, n_neighbors=30)
+
+# Estimate RNA velocity with dynamical model
+scv.tl.recover_dynamics(ldata_basal)
+scv.tl.velocity(ldata_basal, mode='dynamical')
+scv.tl.velocity_graph(ldata_basal)
+scv.pl.velocity_embedding_stream(ldata_basal, basis='umap_cell_embeddings', color='seurat_clusters', 
+                                 figsize=(10,10), components='1,2', 
+                                 palette=["#2E359A", "#FC990E", "#720D0D", "#6E9BD8"], 
+                                 linewidth=1.4, 
+                                 title="scVelo analysis", save="Fumer.png"
+                                )
+```
+![scVelo results for "Fumer" grouped sample](Results/scvelo_Fumer.png)
+
+
+### For "COPD"
+
+```{python eval=FALSE}
+# load data
+ldata_basal = scv.read("./COPD.loom")
+
+# Preprocess the Data
+scv.pp.filter_and_normalize(ldata_basal, min_shared_counts=20, n_top_genes=2000)
+scv.pp.moments(ldata_basal, n_pcs=30, n_neighbors=30)
+
+# Estimate RNA velocity with dynamical model
+scv.tl.recover_dynamics(ldata_basal)
+scv.tl.velocity(ldata_basal, mode='dynamical')
+scv.tl.velocity_graph(ldata_basal)
+scv.pl.velocity_embedding_stream(ldata_basal, basis='umap_cell_embeddings', color='seurat_clusters', 
+                                 figsize=(10,10), components='1,2', 
+                                 palette=["#2E359A", "#FC990E", "#720D0D", "#6E9BD8"], 
+                                 linewidth=1.4, 
+                                 title="scVelo analysis", save="COPD.png"
+                                )
+```
+![scVelo results for "COPD" grouped sample](Results/scvelo_COPD.png)
+
+
+
 # Session information 
+
+R sesssion: 
+
 ```{r}
 sessionInfo()
+```
+
+velocyto version: 
+```{bash eval=FALSE}
+velocyto --version
+```
+```
+velocyto, version 0.17.17
+```
+
+scVelo (python package)
+```{python eval=FALSE}
+import scvelo
+print(scvelo.__version__)
+```
+```
+0.2.3
 ```
 
 # References

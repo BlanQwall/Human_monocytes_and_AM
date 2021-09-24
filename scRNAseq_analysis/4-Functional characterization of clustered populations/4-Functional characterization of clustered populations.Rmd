@@ -212,11 +212,28 @@ results.c2 <- FindClusters(results.c2, resolution = 0.12, verbose = FALSE)
 p <- DimPlot(results.c2, cols = pal_4c.c2)
 p
 ```
+
 ```{r remove after render Fig6-UMAP, include=FALSE}
 ggsave(filename = "UMAPplot_recluster_C3.pdf",
        path = "../../../Human_Monocytes/Rmd_production/Figures/", 
        plot = p, 
        height = 4, width = 5, 
+       device = "pdf")
+```
+
+```{r fig.height=4, fig.width=11}
+pal_4c.c2 <- c("#e09f3e", "#9e2a2b", "#540b0e", "#335c67")
+results.c2 <- FindNeighbors(results.c2, reduction = "pca", dims = 1:10, verbose = FALSE)
+results.c2 <- FindClusters(results.c2, resolution = 0.12, verbose = FALSE)
+p <- DimPlot(results.c2, cols = pal_4c.c2, split.by = "group")
+p
+```
+
+```{r remove after render Fig6-UMAP-split, include=FALSE}
+ggsave(filename = "UMAPplot_recluster_C3_splitbyGroup.pdf",
+       path = "../../../Human_Monocytes/Rmd_production/Figures/", 
+       plot = p, 
+       height = 4, width = 11, 
        device = "pdf")
 ```
 

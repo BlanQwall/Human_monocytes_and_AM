@@ -1,0 +1,252 @@
+---
+title: "6-Gene Ontology enrichment"
+# bibliography: bib.bib
+link-citations: yes
+date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
+output: 
+  pdf_document:
+    pandoc_args: 
+      - '../../common.yaml'
+      - --listings
+    includes: 
+      in_header: '../../preamble.tex'
+    toc: true
+    number_sections: true
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true
+    df_print: tibble
+---
+
+```{r include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+
+\newpage
+
+# Description
+
+For the Gene Ontology (GO) enrichment analysis. 
+
+# Load data and packages 
+
+```{r eval=FALSE}
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+results <- readRDS(file = "../3-Merge and cell typing/so.merged_clusters.seuratObject.Rds")
+```
+
+```{r, remove after render-load data, include=FALSE}
+library(Seurat)
+library(ggplot2)
+library(dplyr)
+results <- readRDS(file = "../../../Human_Monocytes/4 - cell typing and filtering/so.merged_clusters.seuratObject.Rds")
+```
+
+# DE genes and GO enrichment
+
+## Cluster 1 DE analysis and GO enrichment
+
+> The Cluster 1 mentioned in manuscript refers to cluster 0 in the codes following. The same for cluster 2-4 in manuscript, they are cluster 1-3 in the codes. 
+
+Calculate the DE genes. 
+
+```{r}
+de_ident0 <- FindMarkers(results, ident.1 = "0", only.pos = TRUE, logfc.threshold = 0.2)
+head(de_ident0)
+```
+
+Save data
+
+```{r}
+write.csv(de_ident0, file = "./Results_lists/DE_cluster1.csv")
+```
+
+KEGG/GO enrichment: 
+
+```{r echo=TRUE}
+library(clusterProfiler)
+
+de_entrez.ident0 <- bitr( geneID = rownames(de_ident0), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
+result.enrichKEGG.de_ident0 <- enrichKEGG(de_entrez.ident0, organism = "hsa", keyType = "ncbi-geneid")
+```
+
+
+```{r}
+result.enrichKEGG.de_ident0@result
+```
+
+```{r}
+write.csv(result.enrichKEGG.de_ident0, file = "./Results_lists/enrichKEGG_DE_cluster1.csv")
+```
+
+
+```{r}
+result.enrichGO.de_ident0 <- enrichGO(gene = de_entrez.ident0, OrgDb = "org.Hs.eg.db")
+result.enrichGO.de_ident0@result
+```
+
+```{r}
+write.csv(result.enrichGO.de_ident0, file = "./Results_lists/enrichGO_DE_cluster1.csv")
+```
+
+## Cluster 2 DE analysis and GO enrichment
+
+> The Cluster 2 mentioned in manuscript refers to cluster 1 in the codes following. 
+
+Calculate the DE genes. 
+
+```{r}
+de_ident1 <- FindMarkers(results, ident.1 = "1", only.pos = TRUE, logfc.threshold = 0.2)
+head(de_ident1)
+```
+
+
+
+Save data
+
+```{r}
+write.csv(de_ident1, file = "./Results_lists/DE_cluster2.csv")
+```
+
+KEGG/GO enrichment: 
+
+```{r echo=TRUE}
+de_entrez.ident1 <- bitr( geneID = rownames(de_ident1), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
+result.enrichKEGG.de_ident1 <- enrichKEGG(de_entrez.ident1, organism = "hsa", keyType = "ncbi-geneid")
+```
+
+
+```{r}
+result.enrichKEGG.de_ident1@result
+```
+
+```{r}
+write.csv(result.enrichKEGG.de_ident1, file = "./Results_lists/enrichKEGG_DE_cluster2.csv")
+```
+
+
+```{r}
+result.enrichGO.de_ident1 <- enrichGO(gene = de_entrez.ident1, OrgDb = "org.Hs.eg.db")
+result.enrichGO.de_ident1@result
+```
+
+```{r}
+write.csv(result.enrichGO.de_ident1, file = "./Results_lists/enrichGO_DE_cluster2.csv")
+```
+
+
+## Cluster 3 DE analysis
+
+> The Cluster 3 mentioned in manuscript refers to cluster 2 in the codes following. 
+
+Calculate the DE genes. 
+
+```{r}
+de_ident2 <- FindMarkers(results, ident.1 = "2", only.pos = TRUE, logfc.threshold = 0.2)
+nrow(de_ident2)
+```
+
+Save data
+
+```{r}
+write.csv(de_ident2, file = "./Results_lists/DE_cluster3.csv")
+```
+
+## Cluster 4 DE analysis
+
+> The Cluster 4 mentioned in manuscript refers to cluster 3 in the codes following. 
+
+Calculate the DE genes. 
+
+```{r}
+de_ident3 <- FindMarkers(results, ident.1 = "3", only.pos = TRUE, logfc.threshold = 0.2)
+head(de_ident3)
+```
+
+Save data
+
+```{r}
+write.csv(de_ident3, file = "./Results_lists/DE_cluster4.csv")
+```
+
+
+## GO/KEGG enrichment and DE analysis in subpopulations of Cluster 3 after re-clustering
+
+Load Cluster 3 object: 
+
+```{r include=FALSE}
+results.c2 <- readRDS("../../../Human_Monocytes/9 - Analysis of cluster2 (monocytes-derived)/cluster2_clustered.seuratObject.Rds")
+```
+```{r eval=FALSE}
+results.c2 <- readRDS("../4-Functional characterization of clustered populations/cluster2_clustered.seuratObject.Rds")
+```
+
+> REMIND: the subpopulations cluster 1-4 (after reclustering the cluster 3) in the manuscript refer to the cluster 0-3 in the following codes.
+
+Calculate the DE genes. 
+
+DE genes for each subpopulations: 
+
+```{r}
+de_subpop0.c2 <- FindMarkers(object = results.c2, ident.1 = "0", only.pos = TRUE, logfc.threshold = 0.2, verbose = FALSE)
+de_subpop1.c2 <- FindMarkers(object = results.c2, ident.1 = "1", only.pos = TRUE, logfc.threshold = 0.2, verbose = FALSE)
+de_subpop2.c2 <- FindMarkers(object = results.c2, ident.1 = "2", only.pos = TRUE, logfc.threshold = 0.2, verbose = FALSE)
+de_subpop3.c2 <- FindMarkers(object = results.c2, ident.1 = "3", only.pos = TRUE, logfc.threshold = 0.2, verbose = FALSE)
+```
+
+Save data
+
+```{r}
+write.csv(de_subpop0.c2, file = "./Results_lists/DE_subpop1_c3.csv")
+write.csv(de_subpop1.c2, file = "./Results_lists/DE_subpop2_c3.csv")
+write.csv(de_subpop2.c2, file = "./Results_lists/DE_subpop3_c3.csv")
+write.csv(de_subpop3.c2, file = "./Results_lists/DE_subpop4_c3.csv")
+```
+
+Since the subpopulations 2 and 3 are very similar. We would like also to have the DE genes in both subpopulations 2 and 3. 
+
+```{r}
+de_subpop1_2.c2 <- FindMarkers(object = results.c2, ident.1 = c("1", "2"), only.pos = TRUE, logfc.threshold = 0.2, verbose = FALSE)
+write.csv(de_subpop1_2.c2, file = "./Results_lists/DE_subpop2_and_3_of_c3.csv")
+```
+
+KEGG enrichment: 
+
+```{r}
+de_entrez.subpop0.c2 <- bitr( geneID = rownames(de_subpop0.c2), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
+result.de_entrez.subpop0.c2 <- enrichKEGG(de_entrez.subpop0.c2, organism = "hsa", keyType = "ncbi-geneid")
+```
+
+
+```{r}
+result.enrichKEGG.de_ident0@result
+```
+
+```{r}
+write.csv(result.enrichKEGG.de_ident0, file = "./Results_lists/enrichKEGG_DE_cluster1.csv")
+```
+
+
+```{r}
+result.enrichGO.de_ident0 <- enrichGO(gene = de_entrez.ident0, OrgDb = "org.Hs.eg.db")
+result.enrichGO.de_ident0@result
+```
+
+```{r}
+write.csv(result.enrichGO.de_ident0, file = "./Results_lists/enrichGO_DE_cluster1.csv")
+```
+
+
+# Session information 
+
+R sesssion: 
+
+```{r}
+sessionInfo()
+```
+
+# References
+

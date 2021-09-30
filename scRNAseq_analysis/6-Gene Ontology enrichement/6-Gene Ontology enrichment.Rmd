@@ -21,7 +21,6 @@ output:
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
-options(tinytex.verbose = TRUE)
 ```
 
 

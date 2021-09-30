@@ -1,10 +1,11 @@
 ---
 title: "6-Gene Ontology enrichment"
-# bibliography: bib.bib
+bibliography: bib.bib
 link-citations: yes
 date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
 output: 
   pdf_document:
+    latex_engine: xelatex
     pandoc_args: 
       - '../../common.yaml'
       - --listings
@@ -20,6 +21,7 @@ output:
 
 ```{r include=FALSE}
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+options(tinytex.verbose = TRUE)
 ```
 
 
@@ -27,7 +29,7 @@ knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 
 # Description
 
-For the Gene Ontology (GO) enrichment analysis. 
+The DE gene lists used for enrichment analyses were calculated using Seurat function FindMarkers[@SeuratV4] with default arguments except only.pos = TRUE in order to output only positively regulated genes and logfc.threshold of 0.2. KEGG and Gene Ontology enrichment analyses were made using enrichKEGG and enrichGO functions from package clusterProfiler package[@clusterProfiler]⁠ with default arguments. 
 
 # Load data and packages 
 
@@ -217,26 +219,53 @@ KEGG enrichment:
 
 ```{r}
 de_entrez.subpop0.c2 <- bitr( geneID = rownames(de_subpop0.c2), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
-result.de_entrez.subpop0.c2 <- enrichKEGG(de_entrez.subpop0.c2, organism = "hsa", keyType = "ncbi-geneid")
-```
+de_entrez.subpop1.c2 <- bitr( geneID = rownames(de_subpop1.c2), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
+de_entrez.subpop2.c2 <- bitr( geneID = rownames(de_subpop2.c2), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
+de_entrez.subpop3.c2 <- bitr( geneID = rownames(de_subpop3.c2), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
 
+result.enrichKEGG.de_entrez.subpop0.c2 <- enrichKEGG(de_entrez.subpop0.c2, organism = "hsa", keyType = "ncbi-geneid")
+result.enrichKEGG.de_entrez.subpop1.c2 <- enrichKEGG(de_entrez.subpop1.c2, organism = "hsa", keyType = "ncbi-geneid")
+result.enrichKEGG.de_entrez.subpop2.c2 <- enrichKEGG(de_entrez.subpop2.c2, organism = "hsa", keyType = "ncbi-geneid")
+result.enrichKEGG.de_entrez.subpop3.c2 <- enrichKEGG(de_entrez.subpop3.c2, organism = "hsa", keyType = "ncbi-geneid")
 
-```{r}
-result.enrichKEGG.de_ident0@result
-```
-
-```{r}
-write.csv(result.enrichKEGG.de_ident0, file = "./Results_lists/enrichKEGG_DE_cluster1.csv")
-```
-
-
-```{r}
-result.enrichGO.de_ident0 <- enrichGO(gene = de_entrez.ident0, OrgDb = "org.Hs.eg.db")
-result.enrichGO.de_ident0@result
+result.enrichGO.de_entrez.subpop0.c2 <- enrichGO(gene = de_entrez.subpop0.c2, OrgDb = "org.Hs.eg.db")
+result.enrichGO.de_entrez.subpop1.c2 <- enrichGO(gene = de_entrez.subpop1.c2, OrgDb = "org.Hs.eg.db")
+result.enrichGO.de_entrez.subpop2.c2 <- enrichGO(gene = de_entrez.subpop2.c2, OrgDb = "org.Hs.eg.db")
+result.enrichGO.de_entrez.subpop3.c2 <- enrichGO(gene = de_entrez.subpop3.c2, OrgDb = "org.Hs.eg.db")
 ```
 
 ```{r}
-write.csv(result.enrichGO.de_ident0, file = "./Results_lists/enrichGO_DE_cluster1.csv")
+write.csv(result.enrichKEGG.de_entrez.subpop0.c2, file = "./Results_lists/enrichKEGG_DE_subpop1_c3.csv")
+write.csv(result.enrichKEGG.de_entrez.subpop1.c2, file = "./Results_lists/enrichKEGG_DE_subpop2_c3.csv")
+write.csv(result.enrichKEGG.de_entrez.subpop2.c2, file = "./Results_lists/enrichKEGG_DE_subpop3_c3.csv")
+write.csv(result.enrichKEGG.de_entrez.subpop3.c2, file = "./Results_lists/enrichKEGG_DE_subpop4_c3.csv")
+
+write.csv(result.enrichGO.de_entrez.subpop0.c2, file = "./Results_lists/enrichGO_DE_subpop1_c3.csv")
+write.csv(result.enrichGO.de_entrez.subpop1.c2, file = "./Results_lists/enrichGO_DE_subpop2_c3.csv")
+write.csv(result.enrichGO.de_entrez.subpop2.c2, file = "./Results_lists/enrichGO_DE_subpop3_c3.csv")
+write.csv(result.enrichGO.de_entrez.subpop3.c2, file = "./Results_lists/enrichGO_DE_subpop4_c3.csv")
+```
+
+Head 10 lines in GO: 
+
+For subpop 1: 
+```{r}
+head(result.enrichGO.de_entrez.subpop0.c2@result, 10)
+```
+
+For subpop 2: 
+```{r}
+head(result.enrichGO.de_entrez.subpop1.c2@result, 10)
+```
+
+For subpop 3: 
+```{r}
+head(result.enrichGO.de_entrez.subpop2.c2@result, 10)
+```
+
+For subpop 4: 
+```{r}
+head(result.enrichGO.de_entrez.subpop3.c2@result, 10)
 ```
 
 
@@ -249,4 +278,3 @@ sessionInfo()
 ```
 
 # References
-

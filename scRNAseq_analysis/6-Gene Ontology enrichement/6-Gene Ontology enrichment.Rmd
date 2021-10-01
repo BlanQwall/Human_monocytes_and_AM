@@ -211,10 +211,10 @@ write.csv(de_subpop2.c2, file = "./Results_lists/DE_subpop3_c3.csv")
 write.csv(de_subpop3.c2, file = "./Results_lists/DE_subpop4_c3.csv")
 ```
 
-Since the subpopulations 2 and 3 are very similar. We would like also to have the DE genes in both subpopulations 2 and 3. 
+Since the subpopulations 2 and 3 are very similar. We would like also to have the DE genes in both subpopulations 2 & 3 comparing to subpopulation 1 (we excluded cluster 4 because it's high similarity to DCs). 
 
 ```{r}
-de_subpop1_2.c2 <- FindMarkers(object = results.c2, ident.1 = c("1", "2"), only.pos = TRUE, logfc.threshold = 0.2, verbose = FALSE)
+de_subpop1_2.c2 <- FindMarkers(object = results.c2, ident.1 = c("1", "2"), ident.2 = ("0"), only.pos = TRUE, logfc.threshold = 0.2, verbose = FALSE)
 write.csv(de_subpop1_2.c2, file = "./Results_lists/DE_subpop2_and_3_of_c3.csv")
 ```
 
@@ -225,26 +225,31 @@ de_entrez.subpop0.c2 <- bitr( geneID = rownames(de_subpop0.c2), fromType = "SYMB
 de_entrez.subpop1.c2 <- bitr( geneID = rownames(de_subpop1.c2), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
 de_entrez.subpop2.c2 <- bitr( geneID = rownames(de_subpop2.c2), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
 de_entrez.subpop3.c2 <- bitr( geneID = rownames(de_subpop3.c2), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
+de_entrez.subpop1_2.c2 <- bitr( geneID = rownames(de_subpop1_2.c2), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
 
 result.enrichKEGG.de_entrez.subpop0.c2 <- enrichKEGG(de_entrez.subpop0.c2, organism = "hsa", keyType = "ncbi-geneid")
 result.enrichKEGG.de_entrez.subpop1.c2 <- enrichKEGG(de_entrez.subpop1.c2, organism = "hsa", keyType = "ncbi-geneid")
 result.enrichKEGG.de_entrez.subpop2.c2 <- enrichKEGG(de_entrez.subpop2.c2, organism = "hsa", keyType = "ncbi-geneid")
 result.enrichKEGG.de_entrez.subpop3.c2 <- enrichKEGG(de_entrez.subpop3.c2, organism = "hsa", keyType = "ncbi-geneid")
+result.enrichKEGG.de_entrez.subpop1_2.c2 <- enrichKEGG(de_entrez.subpop1_2.c2, organism = "hsa", keyType = "ncbi-geneid")
 
 result.enrichGO.de_entrez.subpop0.c2 <- enrichGO(gene = de_entrez.subpop0.c2, OrgDb = "org.Hs.eg.db", ont = "BP")
 result.enrichGO.de_entrez.subpop1.c2 <- enrichGO(gene = de_entrez.subpop1.c2, OrgDb = "org.Hs.eg.db", ont = "BP")
 result.enrichGO.de_entrez.subpop2.c2 <- enrichGO(gene = de_entrez.subpop2.c2, OrgDb = "org.Hs.eg.db", ont = "BP")
 result.enrichGO.de_entrez.subpop3.c2 <- enrichGO(gene = de_entrez.subpop3.c2, OrgDb = "org.Hs.eg.db", ont = "BP")
+result.enrichGO.de_entrez.subpop1_2.c2 <- enrichGO(gene = de_entrez.subpop1_2.c2, OrgDb = "org.Hs.eg.db", ont = "BP")
 
 result.enrichKEGG.de_entrez.subpop0.c2 <- replaceEntrezID(result.enrichKEGG.de_entrez.subpop0.c2)
 result.enrichKEGG.de_entrez.subpop1.c2 <- replaceEntrezID(result.enrichKEGG.de_entrez.subpop1.c2)
 result.enrichKEGG.de_entrez.subpop2.c2 <- replaceEntrezID(result.enrichKEGG.de_entrez.subpop2.c2)
 result.enrichKEGG.de_entrez.subpop3.c2 <- replaceEntrezID(result.enrichKEGG.de_entrez.subpop3.c2)
+result.enrichKEGG.de_entrez.subpop1_2.c2 <- replaceEntrezID(result.enrichKEGG.de_entrez.subpop1_2.c2)
 
 result.enrichGO.de_entrez.subpop0.c2 <- replaceEntrezID(result.enrichGO.de_entrez.subpop0.c2)
 result.enrichGO.de_entrez.subpop1.c2 <- replaceEntrezID(result.enrichGO.de_entrez.subpop1.c2)
 result.enrichGO.de_entrez.subpop2.c2 <- replaceEntrezID(result.enrichGO.de_entrez.subpop2.c2)
 result.enrichGO.de_entrez.subpop3.c2 <- replaceEntrezID(result.enrichGO.de_entrez.subpop3.c2)
+result.enrichGO.de_entrez.subpop1_2.c2 <- replaceEntrezID(result.enrichGO.de_entrez.subpop1_2.c2)
 ```
 
 ```{r}
@@ -252,11 +257,13 @@ write.csv(result.enrichKEGG.de_entrez.subpop0.c2, file = "./Results_lists/enrich
 write.csv(result.enrichKEGG.de_entrez.subpop1.c2, file = "./Results_lists/enrichKEGG_DE_subpop2_c3.csv")
 write.csv(result.enrichKEGG.de_entrez.subpop2.c2, file = "./Results_lists/enrichKEGG_DE_subpop3_c3.csv")
 write.csv(result.enrichKEGG.de_entrez.subpop3.c2, file = "./Results_lists/enrichKEGG_DE_subpop4_c3.csv")
+write.csv(result.enrichKEGG.de_entrez.subpop1_2.c2, file = "./Results_lists/enrichKEGG_DE_subpop2_3.c3.csv")
 
 write.csv(result.enrichGO.de_entrez.subpop0.c2, file = "./Results_lists/enrichGOBP_DE_subpop1_c3.csv")
 write.csv(result.enrichGO.de_entrez.subpop1.c2, file = "./Results_lists/enrichGOBP_DE_subpop2_c3.csv")
 write.csv(result.enrichGO.de_entrez.subpop2.c2, file = "./Results_lists/enrichGOBP_DE_subpop3_c3.csv")
 write.csv(result.enrichGO.de_entrez.subpop3.c2, file = "./Results_lists/enrichGOBP_DE_subpop4_c3.csv")
+write.csv(result.enrichGO.de_entrez.subpop1_2.c2, file = "./Results_lists/enrichGOBP_DE_subpop2_3_C3.csv")
 ```
 
 Head 10 lines in GO: 
@@ -281,6 +288,10 @@ For subpop 4:
 head(result.enrichGO.de_entrez.subpop3.c2@result, 10)
 ```
 
+For subpop 2,3: 
+```{r}
+head(result.enrichGO.de_entrez.subpop1_2.c2@result, 10)
+```
 
 # Session information 
 

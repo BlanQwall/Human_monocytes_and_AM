@@ -104,14 +104,19 @@ write.csv(result.enrichGO.de_ident0, file = "./Results_lists/enrichGOBP_DE_clust
 Calculate the DE genes. 
 
 ```{r}
+# the cluster 2 upregulated genes: 
 de_ident1 <- FindMarkers(results, ident.1 = "1", only.pos = TRUE, logfc.threshold = 0.2)
-head(de_ident1)
+
+# the cluster 2 upregulated genes as compared to cluster 1: 
+de_ident1_vs0 <- FindMarkers(results, ident.1 = "1", ident.2 = "0", only.pos = TRUE, logfc.threshold = 0.2)
 ```
 
 Save data
 
 ```{r}
 write.csv(de_ident1, file = "./Results_lists/DE_cluster2.csv")
+write.csv(de_ident1_vs0, file = "./Results_lists/DE_cluster2_vs_cluster1.csv")
+
 ```
 
 KEGG/GO enrichment: 
@@ -122,6 +127,12 @@ result.enrichKEGG.de_ident1 <- enrichKEGG(de_entrez.ident1, organism = "hsa", ke
 result.enrichKEGG.de_ident1 <- replaceEntrezID(result.enrichKEGG.de_ident1)
 ```
 
+```{r echo=TRUE}
+de_entrez.ident1_vs0 <- bitr( geneID = rownames(de_ident1_vs0), fromType = "SYMBOL", toType = "ENTREZID", OrgDb = "org.Hs.eg.db", drop = TRUE ) $ ENTREZID
+result.enrichKEGG.de_ident1_vs0 <- enrichKEGG(de_entrez.ident1_vs0, organism = "hsa", keyType = "ncbi-geneid")
+result.enrichKEGG.de_ident1_vs0 <- replaceEntrezID(result.enrichKEGG.de_ident1_vs0)
+```
+
 
 ```{r}
 result.enrichKEGG.de_ident1@result
@@ -129,17 +140,26 @@ result.enrichKEGG.de_ident1@result
 
 ```{r}
 write.csv(result.enrichKEGG.de_ident1, file = "./Results_lists/enrichKEGG_DE_cluster2.csv")
+write.csv(result.enrichKEGG.de_ident1_vs0, file = "./Results_lists/enrichKEGG_DE_cluster2_vs_cluster1.csv")
 ```
 
-
+GO analysis on the upregulated genes in Cluster 2. 
 ```{r}
 result.enrichGO.de_ident1 <- enrichGO(gene = de_entrez.ident1, OrgDb = "org.Hs.eg.db", ont = "BP")
 result.enrichGO.de_ident1 <- replaceEntrezID(result.enrichGO.de_ident1)
 result.enrichGO.de_ident1@result
 ```
 
+GO analysis on the regulated genes in cluster 2 vs cluster 1. 
+```{r}
+result.enrichGO.de_ident1_vs0 <- enrichGO(gene = de_entrez.ident1_vs0, OrgDb = "org.Hs.eg.db", ont = "BP")
+result.enrichGO.de_ident1_vs0 <- replaceEntrezID(result.enrichGO.de_ident1_vs0)
+result.enrichGO.de_ident1_vs0@result
+```
+
 ```{r}
 write.csv(result.enrichGO.de_ident1, file = "./Results_lists/enrichGOBP_DE_cluster2.csv")
+write.csv(result.enrichGO.de_ident1_vs0, file = "./Results_lists/enrichGOBP_DE_cluster2_vs_cluster1.csv")
 ```
 
 

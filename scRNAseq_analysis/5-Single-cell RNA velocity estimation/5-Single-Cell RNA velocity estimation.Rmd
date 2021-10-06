@@ -80,7 +80,7 @@ names(obj.list) <- list.name.so
 
 > The intermediate loom files were too big to be uploaded to the platform but they can be produced by the following steps. 
 
-We counted unspliced- and ambiguous transcripts using velocyto command-line tool (http://velocyto.org)[@LaManno2018]. 
+We counted spliced, unspliced and ambiguous transcripts using velocyto command-line tool (http://velocyto.org)[@LaManno2018]. 
 
 For each sample, the following code was used to generate the loom file: 
 

@@ -151,9 +151,6 @@ head(AFlo_vs_AFhi)
 ```
 
 
-```{r}
-
-```
 
 # Export DE genes for other analyses
 
@@ -187,6 +184,312 @@ write.table(as.data.frame(AFlo_vs_AFhi_ordered), "Results_Mreg_MA_LFC_9patients.
 
 ```
 
+# Volcano plots
+
+```{r}
+keyvals <- rep("black", nrow(AFlo_vs_AFhi))
+names(keyvals) <- rep("non-signif", nrow(AFlo_vs_AFhi))
+
+keyvals[which(AFlo_vs_AFhi$log2FoldChange.y > 1 )] <- "#ff8e03"
+names(keyvals)[which(AFlo_vs_AFhi$log2FoldChange.y > 1)] <- "AFlo AM"
+
+keyvals[which(AFlo_vs_AFhi$log2FoldChange.y < -1)] <- '#371dad'
+names(keyvals)[which(AFlo_vs_AFhi$log2FoldChange.y < -1)] <- "AFhi cAM"
+
+```
+
+```{r fig.width=6, fig.height=5}
+EnhancedVolcano(AFlo_vs_AFhi,
+                lab = rownames(AFlo_vs_AFhi),
+                x = 'log2FoldChange.y',
+                y = 'padj.y',
+                xlim = c(-15, 15),
+                ylim=c(0, -log10(10e-120)),
+                labSize = 0,
+                pCutoff = 0.05,
+                FCcutoff = 1,
+                colAlpha = 1,
+                colCustom = keyvals,
+                legendLabSize = 8,
+                legendIconSize = 2.0,
+                border = "full",
+                legendPosition = "right",
+                axisLabSize = 20)
+```
+
+## Plot Macrophages and Monocytes associated genes
+
+```{r fig.width=5, fig.height=5}
+#plotCount MARCO
+data <- plotCounts(dds, gene="MARCO", intgroup=c("Treatment","Cells"), returnData=TRUE)
+ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
+  scale_y_log10() + 
+  geom_point(position=position_jitter(width=.1,height=0), size =3) +
+  ggtitle("MARCO") +
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  scale_color_manual(values = c("#371dad","#ff8e03","#74c72a"))+
+  ylab ("Normalized Count")+
+  theme_linedraw()+
+  theme_light()
+
+```
+
+
+```{r fig.width=5, fig.height=5}
+#plotCount FABP4
+data <- plotCounts(dds, gene="FABP4", intgroup=c("Treatment","Cells"), returnData=TRUE)
+ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
+  scale_y_log10() + 
+  geom_point(position=position_jitter(width=.1,height=0), size =3) +
+  ggtitle("FABP4") +
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  scale_color_manual(values = c("#371dad","#ff8e03","#74c72a"))+
+  ylab ("Normalized Count")+
+  theme_bw()+
+  theme_linedraw()+
+  theme_light()
+```
+
+```{r fig.width=5, fig.height=5}
+#plotCount PPARG
+data <- plotCounts(dds, gene="PPARG", intgroup=c("Treatment","Cells"), returnData=TRUE)
+ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
+  scale_y_log10() + 
+  geom_point(position=position_jitter(width=.1,height=0), size =3) +
+  ggtitle("PPARG") +
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  scale_color_manual(values = c("#371dad","#ff8e03","#74c72a"))+
+  ylab ("Normalized Count")+
+  theme_bw()+
+  theme_linedraw()+
+  theme_light()
+```
+
+```{r fig.width=5, fig.height=5}
+#plotCount MRC1
+data <- plotCounts(dds, gene="MRC1", intgroup=c("Treatment","Cells"), returnData=TRUE)
+ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
+  scale_y_log10() + 
+  geom_point(position=position_jitter(width=.1,height=0), size =3) +
+  ggtitle("MRC1") +
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  scale_color_manual(values = c("#371dad","#ff8e03","#74c72a"))+
+  ylab ("Normalized Count")+
+  theme_bw()+
+  theme_linedraw()+
+  theme_light()
+```
+
+
+```{r fig.width=5, fig.height=5}
+#plotCount CCR2
+data <- plotCounts(dds, gene="CCR2", intgroup=c("Treatment","Cells"), returnData=TRUE)
+ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
+  scale_y_log10() + 
+  geom_point(position=position_jitter(width=.1,height=0), size =3) +
+  ggtitle("CCR2") +
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  scale_color_manual(values = c("#371dad","#ff8e03","#74c72a"))+
+  ylab ("Normalized Count") + 
+  theme_bw() +
+  theme_linedraw()+
+  theme_light()
+```
+
+```{r fig.width=5, fig.height=5}
+#plotCount CX3CR1
+data <- plotCounts(dds, gene="CX3CR1", intgroup=c("Treatment","Cells"), returnData=TRUE)
+ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
+  scale_y_log10() + 
+  geom_point(position=position_jitter(width=.1,height=0), size =3) +
+  ggtitle("CX3CR1") +
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  scale_color_manual(values = c("#371dad","#ff8e03","#74c72a"))+
+  ylab ("Normalized Count")+ 
+  theme_bw()+
+  theme_linedraw()+
+  theme_light()
+```
+
+
+```{r fig.width=5, fig.height=5}
+#plotCount ADAM19
+data <- plotCounts(dds, gene="ADAM19", intgroup=c("Treatment","Cells"), returnData=TRUE)
+ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
+  scale_y_log10() + 
+  geom_point(position=position_jitter(width=.1,height=0), size =3) +
+  ggtitle("ADAM19") +
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  scale_color_manual(values = c("#371dad","#ff8e03","#74c72a"))+
+  ylab ("Normalized Count")+
+  theme_bw()+
+  theme_linedraw()+
+  theme_light()
+```
+
+```{r fig.width=5, fig.height=5}
+
+#plotCount CD14
+data <- plotCounts(dds, gene="CD14", intgroup=c("Treatment","Cells"), returnData=TRUE)
+ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
+  scale_y_log10() + 
+  geom_point(position=position_jitter(width=.1,height=0), size =3) +
+  ggtitle("CD14") +
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  scale_color_manual(values = c("#371dad","#ff8e03","#74c72a"))+
+  ylab ("Normalized Count")+
+  theme_bw() +
+  theme_linedraw()+
+  theme_light()
+```
+
+
+# DESeq2 analysis for AFlo vs Monocytes
+
+```{r}
+res_AFlo_vs_Monocytes<- results(dds1, contrast=c("Cells","AFlo AM","Monocytes"), lfcThreshold = 1, alpha = 0.05)
+
+
+res_AFlo_vs_Monocytes
+summary(res_AFlo_vs_Monocytes) 
+
+```
+
+```{r}
+#Shrunk
+Res_AFlo_vs_Monocytes_Shrunk <- lfcShrink(dds1, contrast=c("Cells","AFlo AM","Monocytes"),type = "normal",  res=res_AFlo_vs_Monocytes)
+```
+
+```{r}
+#ajouter colonne
+
+AFlo_vs_Monocytes <- merge(x=as.data.frame(res_AFlo_vs_Monocytes), y=as.data.frame(Res_AFlo_vs_Monocytes_Shrunk), by=c(0,1))
+
+#changer nom des colonne
+Genes2 <- AFlo_vs_Monocytes$Row.names
+rownames(AFlo_vs_Monocytes) = make.names(Genes2, unique=TRUE)
+```
+
+```{r}
+AFlo_vs_Monocytes<- AFlo_vs_Monocytes[,-1]
+```
+
+
+```{r}
+# filter 
+# remove les pvalue NA
+AFlo_vs_Monocytes <- AFlo_vs_Monocytes[!is.na(AFlo_vs_Monocytes$padj.y),] # 20580
+
+#Enlever les pvalue >0.05
+AFlo_vs_Monocytes_1 <- subset(AFlo_vs_Monocytes, padj.y < 0.05)
+```
+
+```{r eval=FALSE}
+#To save
+write.table(as.data.frame(AFlo_vs_Monocytes_ordered), "Results_Mreg_Monocytes_LFC_9patients.txt", sep="\t", row.names=T,col.names=T)
+
+```
+
+
+## Volcano plots for comparaison AFlo vs Monocytes
+
+
+```{r}
+keyvals <- rep("black", nrow(AFlo_vs_Monocytes))
+names(keyvals) <- rep("non-signif", nrow(AFlo_vs_Monocytes))
+
+keyvals[which(AFlo_vs_Monocytes$log2FoldChange.y > 1 )] <- "#ff8e03"
+names(keyvals)[which(AFlo_vs_Monocytes$log2FoldChange.y > 1)] <- "AFlo AM"
+
+keyvals[which(AFlo_vs_Monocytes$log2FoldChange.y < -1)] <- '#74c72a'
+names(keyvals)[which(AFlo_vs_Monocytes$log2FoldChange.y < -1)] <- "Monocytes"
+
+```
+
+```{r fig.width=6, fig.height=5}
+EnhancedVolcano(AFlo_vs_Monocytes,
+                lab = rownames(AFlo_vs_Monocytes),
+                x = 'log2FoldChange.y',
+                y = 'padj.y',
+                xlim = c(-15, 15),
+                ylim=c(0, -log10(10e-300)),
+                labSize = 0,
+                pCutoff = 0.05,
+                FCcutoff = 1,
+                colAlpha = 1,
+                colCustom = keyvals,
+                legendLabSize = 8,
+                legendIconSize = 2.0,
+                border = "full",
+                legendPosition = "right",
+                axisLabSize = 20)
+
+```
+
+
+# DESeq2 analysis for comparaison Monocytes vs AFhi
+
+```{r}
+res_Monocytes_vs_AFhi<- results(dds1, contrast=c("Cells","Monocytes","AFhi cAM"), lfcThreshold = 1, alpha = 0.05)
+#Shrunk
+Res_Monocytes_vs_AFhi_Shrunk <- lfcShrink(dds1, contrast=c("Cells","Monocytes","AFhi cAM"), type = "normal", res=res_Monocytes_vs_AFhi)
+
+#ajouter colonne
+Monocytes_vs_AFhi <- merge(x=as.data.frame(res_Monocytes_vs_AFhi), y = as.data.frame(Res_Monocytes_vs_AFhi_Shrunk), by=c(0,1))
+
+#changer nom des colonne
+Genes2 <- Monocytes_vs_AFhi$Row.names
+rownames(Monocytes_vs_AFhi) = make.names(Genes2, unique=TRUE)
+Monocytes_vs_AFhi<- Monocytes_vs_AFhi[,-1]
+
+# filter 
+# remove les pvalue NA
+Monocytes_vs_AFhi <- Monocytes_vs_AFhi[!is.na(Monocytes_vs_AFhi$padj.y),]
+
+#Enlever les pvalue >0.05
+Monocytes_vs_AFhi_1 <- subset(Monocytes_vs_AFhi, padj.y < 0.05)
+
+```
+
+```{r eval=FALSE}
+#To save
+write.table(as.data.frame(Monocytes_vs_AFhi_ordered), "Results_Monocytes_MA_LFC_9patients.txt", sep="\t", row.names=T,col.names=T)
+```
+
+
+## Volcano plots for comparaison Monocytes vs AFhi
+
+```{r}
+keyvals <- rep("black", nrow(Monocytes_vs_AFhi))
+names(keyvals) <- rep("non-signif", nrow(Monocytes_vs_AFhi))
+
+keyvals[which(Monocytes_vs_AFhi$log2FoldChange.y > 1 )] <- "#74c72a"
+names(keyvals)[which(Monocytes_vs_AFhi$log2FoldChange.y > 1)] <- "Monocytes"
+
+keyvals[which(Monocytes_vs_AFhi$log2FoldChange.y < -1)] <- '#371dad'
+names(keyvals)[which(Monocytes_vs_AFhi$log2FoldChange.y < -1)] <- "AFhi cAM"
+
+```
+
+
+```{r fig.width=6, fig.height=5}
+EnhancedVolcano(Monocytes_vs_AFhi,
+                lab = rownames(Monocytes_vs_AFhi),
+                x = 'log2FoldChange.y',
+                y = 'padj.y',
+                xlim = c(-15, 15),
+                ylim=c(0, -log10(10e-300)),
+                labSize = 0,
+                pCutoff = 0.05,
+                FCcutoff = 1,
+                colAlpha = 1,
+                colCustom = keyvals,
+                legendLabSize = 8,
+                legendIconSize = 2.0,
+                border = "full",
+                legendPosition = "right",
+                axisLabSize = 20)
+```
 
 # Session information
 

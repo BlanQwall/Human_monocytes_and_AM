@@ -39,6 +39,7 @@ Notice: The cluster 1/2/3/4 in the manuscript referred to cluster 0/1/2/3 in the
 ```{r eval=FALSE}
 suppressMessages(library(Seurat))
 suppressMessages(library(dplyr))
+suppressMessages(library(ggplot2))
 results <- readRDS(file = "../3-Merge and cell typing/so.merged_clusters.seuratObject.Rds")
 ```
 
@@ -86,14 +87,13 @@ p
 # Expression of macrophage markers and Cluster 1/3/4 signatures
 
 
-```{r fig.width=10, fig.height=4}
+```{r fig.width=8, fig.height=4}
 p <- DotPlot(results, features = c("MRC1", "CD68", 	"MARCO", "LYZ", "FCGR3A", # high expression of core macrophage genes
                               "PPARG", # AM-associated transcription factor
                               "FABP4", "AKR1C1", "LIMA1", "APOL1" , "RBP4",  # Cluster 1 upregulated
-                              "CD2", "CDH1", "ICOS",  # Cluster 1 overexpressed genes coding for cell adhesion molecules
-                              "CCR2", "SPP1", "CCL2", "S100A8", "CD14", # Cluster 3 overexpressed transcripts encoding monocyte lineage-associated molecules
-                              "CD1C", "CD1E", "FCER1A", "CLEC10A", # dendritic cell (DC)-associated proteins
-                              "MKI67", "PCLAF" , "CDK1" # Cluster 4 upregulated cycling-related genes
+                              "SELPLG", "ITGB8", "PECAM1",  # Cluster 1 overexpressed genes coding for cell adhesion molecules
+                              "SPP1", "CCL2", "S100A8", "CD14", # Cluster 3 overexpressed transcripts encoding monocyte lineage-associated molecules
+                              "MKI67", "CDC20" , "CDK1" # Cluster 4 upregulated cycling-related genes
                             ), assay = "RNA", 
                     scale.by = "size",
                     cols = c("dark blue", "red")) +
@@ -107,17 +107,14 @@ p
 ggsave(filename = "DotPlot_signatures_C134.pdf",
        path = "../../../Human_Monocytes/Rmd_production/Figures/", 
        plot = p, 
-       height = 4, width = 10, 
+       height = 4, width = 8, 
        device = "pdf")
 ```
 
 # Expression of cluster 2 signature
 
-```{r fig.width=5.6, fig.height=4}
-p <- DotPlot(results, features = c("CYBB", "CYP1B1", "CYGB", 
-                                    "GPX3", 
-                                   "GCLC", "IL17RA", 
-                                   "PLA2G7", "ATP6V0D2", "CHI3L1", "ITGA6", "SPP1", "MMP12"),
+```{r fig.width=4.9, fig.height=4}
+p <- DotPlot(results, features = c("PRDX1", "TXN", "CYBB", "NCF1", "ALOX5AP", "CES1", "TXNRD1", "MGST1", "ATP6V0D2"),
                     assay = "RNA", 
                     scale.by = "size",
                     cols = c("dark blue", "red")) +
@@ -131,17 +128,14 @@ p
 ggsave(filename = "DotPlot_signatures_C2.pdf",
        path = "../../../Human_Monocytes/Rmd_production/Figures/", 
        plot = p, 
-       height = 4, width = 5.6, 
+       height = 4, width = 4.9, 
        device = "pdf")
 ```
 
 Signature of Cluster 2 in vlnplot: 
 
 ```{r fig.width=6, fig.height=12}
-p <- VlnPlot(results, features = c("CYBB", "CYP1B1", "CYGB", 
-                                    "GPX3", 
-                                   "GCLC", "IL17RA", 
-                                   "PLA2G7", "ATP6V0D2", "CHI3L1", "ITGA6", "SPP1", "MMP12"),
+p <- VlnPlot(results, features = c("PRDX1", "TXN", "CYBB", "NCF1", "ALOX5AP", "CES1", "TXNRD1", "MGST1", "ATP6V0D2"),
                     pt.size = 0, 
                     cols = pal_4c, 
                     ncol = 2)

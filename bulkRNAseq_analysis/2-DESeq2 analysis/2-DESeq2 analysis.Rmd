@@ -342,7 +342,20 @@ ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
   theme_linedraw()+
   theme_light()
 ```
-
+```{r fig.width=5, fig.height=5}
+#plotCount IL10
+data <- plotCounts(dds, gene="IL10", intgroup=c("Treatment","Cells"), returnData=TRUE)
+ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
+  scale_y_log10() + 
+  geom_point(position=position_jitter(width=.1,height=0), size =3) +
+  ggtitle("IL10") +
+  theme(plot.title = element_text(hjust = 0.5, size = 20)) +
+  scale_color_manual(values = c("#371dad","#ff8e03","#74c72a"))+
+  ylab ("Normalized Count")+ 
+  theme_bw()+
+  theme_linedraw()+
+  theme_light()
+```
 
 # DESeq2 analysis for AFlo vs Monocytes
 

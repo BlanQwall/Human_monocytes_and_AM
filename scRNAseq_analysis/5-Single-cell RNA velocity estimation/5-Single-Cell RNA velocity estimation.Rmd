@@ -49,8 +49,7 @@ library(dplyr)
 library(loomR)
 library(tidyverse)
 
-
-seurat.combined <- readRDS(file = "../../../Human_Monocytes/4 - cell typing and filtering/so.merged_clusters.seuratObject.Rds")
+seurat.combined <- readRDS(file = "../../../Human_monocytes_and_AM/scRNAseq_analysis/3-Merge and cell typing/so.merged_clusters.seuratObject.Rds")
 ```
 
 # Prepare data RNAvelocyto
@@ -185,7 +184,7 @@ for (name.sample in list.name.sample) {
 
 *Except LBA_Hum7, other loomsome cells are not in other loom files. So remove them.* 
 
-Remove cells that not in Seurat object. 
+Remove cells that are not in Seurat object. 
 
 ```{r}
 # important to skip the all-done sample: 
@@ -347,28 +346,28 @@ saveRDS(obj, file = "./obj_group_by_group.list.loom_surat.Rds")
 To facilitate the work, we optimized Seurat `Convert` function to merge a Seurat/Loom list to one Loom file, containing the var matrix with spliced, unspliced layers and obs with all embedding, tsne, umap, pca, clustering, etc. 
 A Loom file issue from the function above `Convert.seurat_loom` will be saved in the current working folder.
 
-For "Non fumer" 
+For "Healthy non-smokers" 
 
 ```{r eval=FALSE}
 library(loomR)
 source("../../R/Convert_Seurat_loom.R")
-obj.sl <- obj$`No fumer`
+obj.sl <- obj$`Healthy non-smokers`
 pfile <- Convert.seurat_loom(from = obj.sl, to = "loom", filename = "No_Fumer.loom" )
 pfile$close_all()
 ```
 
-For "Fumer":
+For "Non-COPD smokers":
 
 ```{r eval=FALSE}
-obj.sl <- obj$Fumer
+obj.sl <- obj$`Non-COPD smokers`
 pfile <- Convert.seurat_loom(from = obj.sl, to = "loom", filename = "Fumer.loom" )
 pfile$close_all()
 ```
 
-For "COPD":
+For "COPD smokers":
 
 ```{r eval=FALSE}
-obj.sl <- obj$COPD
+obj.sl <- obj$`COPD smokers`
 pfile <- Convert.seurat_loom(from = obj.sl, to = "loom", filename = "COPD.loom" )
 pfile$close_all()
 ```
@@ -381,7 +380,7 @@ pfile$close_all()
 
 The following codes were used to calculate scRNA velocity and presenting with the existing embedding and labels. 
 
-### For "Non-fumer"
+### For "Healthy non-smokers"
 
 ```{python eval=FALSE}
 # python below
@@ -408,9 +407,9 @@ scv.pl.velocity_embedding_stream(ldata_basal, basis='umap_cell_embeddings', colo
                                  title="scVelo analysis", save="No_Fumer.png"
                                 )
 ```
-![scVelo results for "Non fumer" grouped sample](Results/scvelo_No_Fumer.png)
+![scVelo results for "Healthy non-smokers" grouped sample](Results/scvelo_No_Fumer.png)
 
-### For "Fumer"
+### For "Non-COPD smokers"
 
 ```{python eval=FALSE}
 # load data
@@ -431,10 +430,10 @@ scv.pl.velocity_embedding_stream(ldata_basal, basis='umap_cell_embeddings', colo
                                  title="scVelo analysis", save="Fumer.png"
                                 )
 ```
-![scVelo results for "Fumer" grouped sample](Results/scvelo_Fumer.png)
+![scVelo results for "Non-COPD smokers" grouped sample](Results/scvelo_Fumer.png)
 
 
-### For "COPD"
+### For "COPD smokers"
 
 ```{python eval=FALSE}
 # load data
@@ -455,7 +454,7 @@ scv.pl.velocity_embedding_stream(ldata_basal, basis='umap_cell_embeddings', colo
                                  title="scVelo analysis", save="COPD.png"
                                 )
 ```
-![scVelo results for "COPD" grouped sample](Results/scvelo_COPD.png)
+![scVelo results for "COPD smokers" grouped sample](Results/scvelo_COPD.png)
 
 
 

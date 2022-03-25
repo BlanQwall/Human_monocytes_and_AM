@@ -79,7 +79,7 @@ for (i in 1:length(table.samples$sample.names)) {
 The metadata of samples are also available with resource data in NCBI GEO database or click this (link to download)[https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE183974&format=file&file=GSE183974%5Fmetadata%5Fall%5Ffiltered%5Fcells%2Ecsv%2Egz]: 
 (https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183974)[https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE183974]
 
-Here's sample order: 
+Here is the sample order: 
 ```{r}
 table.samples$sample.names
 ```
@@ -87,9 +87,9 @@ table.samples$sample.names
 
 ```{r}
 sample.metadata <- data.frame(
-                              group = c("No fumer", "Fumer", "Fumer", "Fumer", 
-                                        "No fumer", "COPD", "No fumer", "COPD", 
-                                        "COPD"), 
+                              group = c("Healthy non-smokers", "Non-COPD smokers", "Non-COPD smokers", "Non-COPD smokers", 
+                                        "Healthy non-smokers", "COPD smokers", "Healthy non-smokers", "COPD smokers", 
+                                        "COPD smokers"), 
                               cell.type = rep("AM", length(table.samples$sample.names)), 
                               origin = rep("LBA", length(table.samples$sample.names)), 
                               sample_prefix = gsub(".*(Dim_)|.seuratObject", "\\2", table.samples$sample.names))
@@ -279,30 +279,30 @@ DimPlot(results, split.by = "group", cols = pal_4c)
 See the cluster distribution in samples (by group): 
 
 ```{r fig.width=10, fig.height=4}
-DimPlot(subset(results, subset = group == "COPD"), 
+DimPlot(subset(results, subset = group == "COPD smokers"), 
         split.by = "origin", 
-        cols = pal_4c) + ggtitle("COPD")
+        cols = pal_4c) + ggtitle("COPD smokers")
 ```
 
 ```{r fig.width=10, fig.height=4}
-DimPlot(subset(results, subset = group == "Fumer"), split.by = "origin", 
-        cols = pal_4c) + ggtitle("Fumer")
+DimPlot(subset(results, subset = group == "Non-COPD smokers"), split.by = "origin", 
+        cols = pal_4c) + ggtitle("Non-COPD smokers")
 ```
 
 ```{r fig.width=10, fig.height=4}
-DimPlot(subset(results, subset = group == "No fumer"), split.by = "origin", 
-        cols = pal_4c) + ggtitle("Non-fumer")
+DimPlot(subset(results, subset = group == "Healthy non-smokers"), split.by = "origin", 
+        cols = pal_4c) + ggtitle("Healthy non-smokers")
 ```
 
 Show distribution of clusters in barplot: 
 ```{r fig.height=6, fig.width=4, message=FALSE}
 source("../../R/SeuratFreqTable.R")
 freq.celltype.list <- list(
-  COPD = Seurat2CellFreqTable(subset(results, subset = group == "COPD"), 
+  `COPD smokers` = Seurat2CellFreqTable(subset(results, subset = group == "COPD smokers"), 
                               slotName = "RNA_snn_res.0.12"),  
-  Fumer= Seurat2CellFreqTable(subset(results, subset = group == "Fumer"), 
+  `Non-COPD smokers` = Seurat2CellFreqTable(subset(results, subset = group == "Non-COPD smokers"), 
                               slotName = "RNA_snn_res.0.12"), 
-  No_Fumer= Seurat2CellFreqTable(subset(results, subset = group == "No fumer"), 
+  `Healthy non-smokers`= Seurat2CellFreqTable(subset(results, subset = group == "Healthy non-smokers"), 
                                  slotName = "RNA_snn_res.0.12") 
 )
 
@@ -365,14 +365,14 @@ Distribution of cell-cycle phase by group:
 
 ```{r}
 freq.celltype.list <- list(
-  COPD = Seurat2CellFreqTable(subset(results, subset = group  == "COPD"), slotName = "Phase"), 
-  Fumer = Seurat2CellFreqTable(subset(results, subset = group  == "Fumer"), slotName = "Phase"), 
-  No_fumer = Seurat2CellFreqTable(subset(results, subset = group  == "No fumer"), slotName = "Phase")
+  `COPD smokers` = Seurat2CellFreqTable(subset(results, subset = group  == "COPD smokers"), slotName = "Phase"), 
+  `Non-COPD smokers` = Seurat2CellFreqTable(subset(results, subset = group  == "Non-COPD smokers"), slotName = "Phase"), 
+  `Healthy non-smokers` = Seurat2CellFreqTable(subset(results, subset = group  == "Healthy non-smokers"), slotName = "Phase")
 )
 barChart(freq.celltype.list) + labs(fill = "Cell-cycle phase")
 ```
 
-```{r eval=FALSE} 
+```{r} 
 saveRDS(results, file = "./so.merged_clusters.seuratObject.Rds")
 ```
 

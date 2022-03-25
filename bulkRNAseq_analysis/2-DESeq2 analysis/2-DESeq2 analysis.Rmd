@@ -1,11 +1,12 @@
 ---
 title: "2-DESeq2 analysis"
-bibliography: bib.bib
-link-citations: yes
 date: "`r format (Sys.time(), format='%Y-%m-%d %H:%M:%S %z')`"
+bibliography: bib.bib
 output: 
+  #bookdown::pdf_book:
   pdf_document:
-    pandoc_args: 
+    # base_format: rticles::springer_article
+    pandoc_args:
       - '../../common.yaml'
       - --listings
     includes: 
@@ -217,7 +218,7 @@ EnhancedVolcano(AFlo_vs_AFhi,
                 axisLabSize = 20)
 ```
 
-## Plot Macrophages and Monocytes associated genes
+## Plot Macrophages- and Monocytes-associated genes
 
 ```{r fig.width=5, fig.height=5}
 #plotCount MARCO
@@ -357,7 +358,7 @@ ggplot(data, aes(x=Cells, y=count, color=Cells, shape = Treatment)) +
   theme_light()
 ```
 
-# DESeq2 analysis for AFlo vs Monocytes
+# DESeq2 analysis for AF^lo^ AM vs Monocytes
 
 ```{r}
 res_AFlo_vs_Monocytes<- results(dds1, contrast=c("Cells","AFlo AM","Monocytes"), lfcThreshold = 1, alpha = 0.05)
@@ -404,7 +405,7 @@ write.table(as.data.frame(AFlo_vs_Monocytes_ordered), "Results_Mreg_Monocytes_LF
 ```
 
 
-## Volcano plots for comparaison AFlo vs Monocytes
+## Volcano plots for comparaison of AF^lo^ AM vs Monocytes
 
 
 ```{r}
@@ -440,7 +441,7 @@ EnhancedVolcano(AFlo_vs_Monocytes,
 ```
 
 
-# DESeq2 analysis for comparaison Monocytes vs AFhi
+# DESeq2 analysis for comparaison of Monocytes vs AF^hi^ AM
 
 ```{r}
 res_Monocytes_vs_AFhi<- results(dds1, contrast=c("Cells","Monocytes","AFhi cAM"), lfcThreshold = 1, alpha = 0.05)
@@ -470,7 +471,7 @@ write.table(as.data.frame(Monocytes_vs_AFhi_ordered), "Results_Monocytes_MA_LFC_
 ```
 
 
-## Volcano plots for comparaison Monocytes vs AFhi
+## Volcano plots for comparaison of Monocytes vs AF^hi^ AM
 
 ```{r}
 keyvals <- rep("black", nrow(Monocytes_vs_AFhi))
